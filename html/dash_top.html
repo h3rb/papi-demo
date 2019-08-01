@@ -1,0 +1,8 @@
+<div id="search" class="centered_search_bar">
+<input type="text" name="search" class="search_keys" id="search_keys" placeholder="Search..."/>
+<button id="searchbutton" class="searchbutton"><span class="fi-magnifying-glass"></span></button>
+</div>
+<script>
+ $("#search").click(function(e){ $(e.target).attr("placeholder","Find tests..."); });
+ $("#search").focusout(function(e){ $(e.target).attr("placeholder","Search..."); });
+</script>

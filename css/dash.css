@@ -1,0 +1,44 @@
+
+.centered_search_bar {
+width: 100%;
+height:auto;
+text-align: center;
+/*background-color: rgba(222,39,71,0.4);*/
+display:block;
+padding:10px;
+margin:0;
+position:absolute;
+top:63px;
+left:0;
+z-index:10099;
+background-color:#DDD;
+}
+
+.search_keys {
+    border: 2px solid gray;
+    font-size: 200%;
+    border-radius: 4px;
+    width: 130px;
+    -webkit-transition: width 0.4s ease-in-out;
+    transition: width 0.4s ease-in-out;
+}
+
+.searchbutton {
+ width:32px;
+ height:32px;
+ position:absolute;
+ float:right;
+ margin:0;
+ top:1m; right:2m;
+ border-radius:8px;
+ background-color:#EEE;
+}
+
+/* When the input field gets focus, change its width to 100% */
+input[type=text]:focus {
+    width: 80%;
+}
+
+.results {
+ display:none;
+}

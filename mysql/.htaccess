@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Restricted Access"
+AuthUserFile /home/main/myadmin_password_htpasswd_micert_mysql
+Require user admin
