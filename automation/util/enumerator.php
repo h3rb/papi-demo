@@ -2,12 +2,12 @@
 
  // Just an example, refactor this code to generate basic enumerator classes for use in config.enums.php
 
- $new_type_name="AssessmentPassMode";
+ $new_type_name="AssessmentQuestionType";
  $starts_at=1;
  $input=array(
-  "Minimum"=>0,
-  "Percentage"=>1,
-  "All"=>2
+  "MultipleChoice"=>1,
+  "TrueFalse"=>2,
+  "Essay"=>3
  );
 
  echo '

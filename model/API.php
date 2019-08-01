@@ -43,8 +43,16 @@
     $type=$map[$k][1];
     if ( isset($in[$k]) ) {
      $value=$in[$k];
-     if ( $type == 'user' ) { global auth; $final[$column]=$auth['ID']; }
-     else if ( $type == 'integer' ) {
+     if ( $type == 'user' ) { global $auth; $final[$column]=$auth['ID']; }
+     if ( $type == 'reference' ) {
+      if ( is_numeric($value) ) {
+       $table=str_replace($column,"r_");
+       $id = intval($value);
+       if ( $id === 0 ) $final[$column]=intval($value); // remove reference
+       else if ( API::OwnerOf($table,intval($value)) ) $final[$column]=intval($value);
+       else API::Failure( "Reference to member of $table not owned by user (or does not exist)", -11);
+      } else API::Failure( "Wrong type for value '$k', expected $type", -9 );
+     } else if ( $type == 'integer' ) {
       if ( is_numeric($value) ) $final[$column]=intval($value);
       else API::Failure( "Wrong type for value '$k', expected $type", -9 );
      } else if ( $type == 'decimal' ) {
@@ -68,6 +76,7 @@
    }
   }
 
+  // Checks if you are an owner of a particular ID for a table, does a lookup
   static function OwnerOf( $table, $id ) {
    global $database;
    global $auth;
@@ -77,6 +86,13 @@
     return TRUE;
    }
    return FALSE;
+  }
+
+  // Checks an array for "Owner" value equal to auth['ID']
+  static function UserNotOwner( $tablename, $values ) {
+   if ( !isset($values['Owner']) ) API::Failure("Check against Owner value not possible.",-12);
+   if ( intval($values['Owner']) != intval($auth['ID']) ) API::Failure("Attempt to set 'owner' value in $tablename to another user ID not allowed in this context.",-13);
+   return TRUE;
   }
 
 
