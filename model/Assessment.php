@@ -26,7 +26,7 @@ abstract class AssessmentPassMode extends Enum {
     "parent" => array( "r_Assessment", 'reference' ),
     "timed" => array( "Timed", 'bool' ),
     "limit" => array( "TimeLimit", 'integer' ),
-    "mode" => array( "Passmode", 'AssessmentPassMode' ),
+    "mode" => array( "PassMode", 'AssessmentPassMode' ),
     "minimum" => array( "PassMinimum", 'integer' ),
     "percentage" => array( "PassPercentage", 'decimal' ),
     "pooled" => array( "QuestionsFromPool", 'bool' ),
@@ -62,22 +62,23 @@ abstract class AssessmentPassMode extends Enum {
    $m = new Assessment($database);
    $values=API::MapValues( "Assessment", $vars['data'], Assessment::JSONMap(), Assessment::ValuesArray() );
    if ( isset($vars['for']) ) {
-    if ( API::OwnerOf("Program",$vars['for']) ) $values['r_Program']=$vars['for'];
+    if ( API::OwnerOf("Program",$vars['for'],$program) ) $values['r_Program']=$vars['for'];
     else API::Failure("Not owner of that Program.", -10);
    }
    API::UserNotOwner("Assessment",$values);
-   $id=$m->Create($values);
+   $id=$m->Insert($values);
+   if ( false_or_null($id) ) API::Failure("Unable to create assessment.",-98);
    API::Success("Assessment created.", array("id"=>$id));
   }
   static function Modify( $vars ) {
    global $database;
    $m = new Assessment($database);
-   $values=API::MapValues( "Assessment", $vars['data'], Assessment::JSONMap(), Assessment::ValuesArray() );
-   API::UserNotOwner("Assessment",$values);
    if ( isset($vars['for']) ) {
-    if ( API::OwnerOf("Assessment",$vars['for']) ) $id=$vars['for'];
+    if ( API::OwnerOf("Assessment",$vars['for'],$existing) ) $id=$vars['for'];
     else API::Failure("Not owner of Assessment.", -10);
    } else API::Failure("No Assessment ID provided.", -9);
+   $values=API::MapValues( "Assessment", $vars['data'], Assessment::JSONMap(), $existing );
+   API::UserNotOwner("Assessment",$values);
    API::UserNotOwner("Assessment",$values);
    $m->Set($id,$values);
    API::Success("Assessment modified.", array("id"=>$id));

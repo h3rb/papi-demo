@@ -15,12 +15,12 @@
   }
 
   static function HeaderCredentials( $vars ) {
-   global $headers, $auth_database, $auth, $session_id, $session, $session_token, $is_admin;
+   global $headers, $auth_database, $auth_model, $auth,
+          $session_id, $session, $session_token, $is_admin;
    $session_id=-1;
    $session=NULL;
    $is_admin=FALSE;
    $headers = apache_request_headers();
-   API::PublicAPI($vars);
    if ( isset($headers['X-Papi-Application-Id']) && $headers['X-Papi-Application-Id']==stringval(MY_APP_ID) ) {
     if ( isset( $headers['X-Papi-Admin-Token'] ) && $headers['X-Papi-Admin-Token']==stringval(MY_ADMIN_TOKEN) ) {
      $is_admin &= TRUE;
@@ -28,25 +28,22 @@
     if ( isset( $headers['X-Papi-Session-Token'] ) ) {
      $session_token=$headers['X-Papi-Session-Token'];
      $session=Session::ByToken($session_token);
-     $session_id=$session['ID'];
      if ( false_or_null($session) ) {
-      API::Failure("Session is Expired or Invalid",102);
+      API::Failure("Session is Invalid",102);
      }
-     $result=Session::HeaderRefresh();
-     if ( $result === NULL ) {
-      if ( !$is_admin ) API::Failure("Session is Invalid",103);
+     if ( time() > intval($session['expiresAt']) ) {
+      API::Failure("Session is Expired",104);
      }
-     if ( $result === FALSE ) {
-      if ( !$is_admin ) API::Failure("Session is Expired",104);
-     }
-     $m=new User($auth_database);
-     $auth=$m->Get($session['r_User']);
+     $session_id=$session['ID'];
+     Session::Refresh();
+     $auth_model=new Auth($auth_database);
+     $auth=$auth_model->Get($session['r_Auth']);
      if ( false_or_null($auth) ) {
       if ( !$is_admin ) API::Failure("User is not valid for Session",101);
      }
      $is_admin=(intval($auth['su'])>0)?TRUE:$is_admin;
     }
-    return $session;
+    plog( "HeaderCredentials: ".implode(",",$session) );
    } else API::Failure("Failed to include valid application identification header.",100);
   }
 
@@ -74,7 +71,7 @@
   }
 
   static function MapValues( $dataName, $in, $map, $defaults ) {
-   $final = array();
+   $final = $defaults;
    $keys = array_keys($map);
    foreach ( $keys as $k ) {
     if ( !isset($map[$k]) ) API::Failure("Invalid data key '$k' submitted for '$dataName'", -8 );
@@ -113,22 +110,26 @@
      $final[$column] = $defaults[$column];
     } else API::Failure("Invalid data key '$k' submitted for '$dataName'", -8 );
    }
+   return $final;
   }
 
   // Checks if you are an owner of a particular ID for a table, does a lookup
-  static function OwnerOf( $table, $id ) {
+  static function OwnerOf( $table, $id, &$existing ) {
    global $database;
    global $auth;
    $model = new $table($database);
    $result = $model->Get($id);
    if ( !false_or_null($result) && is_array($result) && intval($auth['ID']) == intval($result['Owner']) ) {
+    $existing = $result;
     return TRUE;
    }
+   $existing = NULL;
    return FALSE;
   }
 
   // Checks an array for "Owner" value equal to auth['ID']
   static function UserNotOwner( $tablename, $values ) {
+   global $auth;
    if ( !isset($values['Owner']) ) API::Failure("Check against Owner value not possible.",-12);
    if ( intval($values['Owner']) != intval($auth['ID']) ) API::Failure("Attempt to set 'owner' value in $tablename to another user ID not allowed in this context.",-13);
    return TRUE;

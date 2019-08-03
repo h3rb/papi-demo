@@ -33,9 +33,9 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 
  // var_dump($g); die;
 
- $key=API::Credentials($g);
+ API::Credentials($g);
 
- if ( false_or_null($key) ) API::Failure("Not logged in or no valid API credential.",-1);
+ if ( false_or_null($session) ) API::Failure("Not logged in or no valid API credential.",-1);
 
  // var_dump($g); die;
 
@@ -63,3 +63,5 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
   $id=API::GetValue($g,'id',-3);
   API::Profile($g,$id);
  }
+
+ API::Failure("Unknown request or badly formed request.",-99);
