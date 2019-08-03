@@ -8,7 +8,8 @@
     $pw = $vars['login']['password'];
     $result=Auth::Login($un,$pw);
     if ( $result === -123 ) API::Failure("Password is expired.",-123);
-    API::Response("success","Logged in.",array("key"=>$result));
+    global $session_token;
+    API::Response("success","Logged in.",array("key"=>$session_token));
    }
    if (!isset($vars['session'])) return API::HeaderCredentials($vars);
    return Session::ByKey($vars['session']);
