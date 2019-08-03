@@ -1535,3 +1535,38 @@ if ( !function_exists('is') ) {
   return FALSE;
  }
 }
+
+
+if ( !function_exists('stringval') ) {
+ function stringval( $x ) { return "".$x; }
+}
+
+if ( !function_exists("RemoveKeys") ) {
+ function RemoveKeys( $in, $rem ) { // Filters unwanted tags from incoming database-modifying statements
+  $out=array();
+  foreach ( $in as $keyed=>$value ) {
+   if ( is_array($rem) ) {
+    $found=FALSE;
+    foreach($rem as $v) if ( $keyed===$v ) $found=TRUE;
+    if ( $found ) continue;
+   } else if ( $keyed === $rem ) continue;
+   $out[$keyed]=$value;
+  }
+  return $out;
+ }
+}
+
+if ( !function_exists("OnlyKeys") ) {
+ function OnlyKeys( $in, $rem ) { // Permits on a certain set of keys for database-modifying statements
+  $out=array();
+  foreach ( $in as $keyed=>$value ) {
+   if ( is_array($rem) ) {
+    $found=FALSE;
+    foreach($rem as $v) if ( $keyed!==$v ) $found=TRUE;
+    if ( !$found ) continue;
+   } else if ( $keyed !== $rem ) continue;
+   $out[$keyed]=$value;
+  }
+  return $out;
+ }
+}

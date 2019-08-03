@@ -13,6 +13,9 @@
 // global $plog_level; $plog_level=1;
 
  include_once 'path.php'; //<- change siteroot here to move site
+
+ include_once SITE_ROOT.'/modules/apache_request_headers_fpm.php';
+
  include_once 'errors.php';
  include_once 'utility.php';
  include_once 'unique.php';

@@ -6,16 +6,15 @@
 
  class Session extends Model {
 
-  var $data;
-  public function Construct() {
-   $this->data=array();
+  static function GenerateFor( $r_Auth ) {
+   return Session::CreateNew($r_Auth);
   }
 
-  public function GenerateForKey( $r_Auth ) { return base64_encode(Session::Create($r_Auth)); }
-
   // Creates a new session
-  public function Create( $r_Auth ) {
-   plog("Session::Create for User ID: ".$r_Auth);
+  static function CreateNew( $r_Auth, $CREATE_COOKIES=FALSE ) {
+   global $database, $auth_database, $auth, $session, $session_token, $session_id;
+   $model = new Session($auth_database);
+   plog("Session::CreateNew for User ID: ".$r_Auth);
    $now=strtotime('now');
    $data=array(
     "login"    => $now,
@@ -25,27 +24,29 @@
     "BROWSER"  => getenv('HTTP_USER_AGENT'),
     "r_Auth"   => $r_Auth,
     "status"   => 1,
-    "refreshed"=> $now,
-    "last_refreshed"=> $now
+    'expiresAt'     => ($expiry=strtotime(SESSION_LENGTH))
    );
-   global $session_id,$auth;
-   $session_id=$this->Insert( $data );
-   plog('New session ID: '.vars($session_id));
-   cook( "username", $auth['username'], timeout );
-   cook( "session",  $session_id, timeout );
+   $new_id=$model->Insert( $data );
+   plog('New session ID: '.vars($new_id));
+   if ( $CREATE_COOKIES !== FALSE ) cook( "username", $auth['username'], timeout );
+   $session_token=md5(uniqid($new_id,true));
+   $result=$model->Update(array(
+    'token' => $session_token
+   ), array("ID"=>$new_id));
+   $session_id=$new_id;
+   if ( $CREATE_COOKIES !== FALSE ) cook( "session",  $session_token, timeout );
+   $session = $data;
+   $session['token'] = $session_token;
+   plog( "Session::CreateNew, token is: ".$session_token );
    return $session_id;
   }
 
   // Tests if there is a current session, called in the bootstrap
   public function Active( $refresh=TRUE ) {
-   global $session_model,$auth_model;
-   global $is_logged_in;
-   global $session;
-   global $user;
-   global $auth;
+   global $session_model,$auth_model,$auth,$is_logged_in,$session,$session_id,$session_token,$auth;
    plog( "Cookies: ".print_r($_COOKIE,true) );
    if ( !isset($_COOKIE['session']) ) return ($is_logged_in=false);
-   $session=$this->Get( base64_decode($_COOKIE['session']) );
+   $session=$this->ByToken(base64_decode($_COOKIE['session']) );
    if ( !is_array($session) || !isset($session['r_Auth']) ) { plog("No session or invalid Auth: ".print_r($session,true) ); return ($is_logged_in=false); }
    if ( $this->LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
    $auth=$auth_model->Get( $session['r_Auth'] );
@@ -56,7 +57,7 @@
     $is_logged_in=false;
     Page::Redirect("login?m=4");
    }
-   $this->Refresh($session);
+   $this->Refresh();
    $url=current_page_url();
    // Ignore any ajaxy stuff
    if ( stripos($url,"ajax.") === FALSE )
@@ -64,12 +65,26 @@
    return ($is_logged_in=true);
   }
 
+  static public function ByUser( $r_Auth ) {
+   global $database;
+   $m=new Session($database);
+   $sessions=$m->Select(array('r_Auth'=>$r_User));
+   if ( false_or_null($sessions) ) return NULL;
+   if ( count($sessions) === 0 ) return NULL;
+   return array_shift($sessions);
+  }
+
+  static public function ByToken( $session_token ) {
+   global $auth_database;
+   $m=new Session($auth_database);
+   return $m->First("token",$session_token);
+  }
+
   // Tests if there is a current session, called in the bootstrap
   public function ByKey( $key, $refresh=TRUE ) {
    global $session_model,$auth_model;
    global $is_logged_in;
    global $session;
-   global $user;
    global $auth;
    $session=$this->Get( base64_decode($key) );
    if ( !is_array($session) || !isset($session['r_Auth']) ) { plog("No session or invalid Auth: ".print_r($session,true) ); return ($is_logged_in=false); }
@@ -82,7 +97,7 @@
     $is_logged_in=false;
     Page::Redirect("login?m=4");
    }
-   $this->Refresh($session);
+   $this->Refresh();
    $url=current_page_url();
    // Ignore any ajaxy stuff
    if ( stripos($url,"ajax.") === FALSE )
@@ -95,7 +110,7 @@
   }
 
   public function Timedout( $session ) {
-   return (strtotime('now')-intval($session['refreshed']) >= timeout);
+   return (strtotime('now') > intval($session['expiresAt']));
   }
 
   public function ActiveUsers() {
@@ -107,34 +122,12 @@
    }
    return $active;
   }
-
-  public function Refresh( $session ) {
-   global $no_session_refresh;
-   global $session_refreshed;
-   if ( $session_refreshed === FALSE )
-   if ( $no_session_refresh === TRUE ) {} else {
-    $this->Set( $session['ID'],
-     array( "last_refreshed" => $session['refreshed'],
-           "refreshed" => strtotime('now'),
-           "requests" => intval($session['requests'])+1
-     )
-    );
-    global $database;
-    $a_model=new Auth($database);
-    $a=$a_model->Get($session['r_Auth']);
-    cook( "username", $a['username'], timeout );
-    cook( "session",  $session['ID'], timeout );
-   }
-   $session_refreshed=TRUE;
-  }
-
   
     // Tests if there is a current session, called when you don't have a cookie to depend on (mobile client)
   public function isActive( $id, $refresh=TRUE ) {
    global $session_model,$auth_model;
    global $is_logged_in;
    global $session;
-   global $user;
    global $auth;
    plog( "Cookies: ".print_r($_COOKIE,true) );
    $session=$this->Get( $id );
@@ -147,7 +140,7 @@
     $this->Logout();
     return ($is_logged_in=false);
    }
-   $this->Refresh($session);
+   $this->Refresh();
    $url=current_page_url();
    // Ignore any ajaxy stuff
    if ( stripos($url,"ajax.") === FALSE )
@@ -193,8 +186,8 @@
 
  // Debug function
  function print_debug_info( $sid="none in this context" ) {
+  global $auth, $session_model, $auth_model, $session;
   plog( '---------' );
-  global $user;
   plog( '$_SESSION' );
   plog( $_SESSION );
   plog( '$_COOKIE' );
@@ -203,7 +196,7 @@
   plog('print_debug_info:');
   plog( 'logged in: ' . ($logged_in ? "Yes" : "No") );
   plog( 'User:' );
-  plog( $user );
+  plog( $auth );
   plog( 'Session (superglobal,b64): ' . $_SESSION['session'] );
   plog( 'Database Session Entry:' );
   global $session_model;
@@ -211,22 +204,6 @@
   plog( $session );
   plog( '---------' );
  }
-
- /*
- function is_logging_out() {
-  global $session_id;
-  if ( !is_null($session_id) ) { $sid=$session_id; } else return FALSE;
-  global $session_model;
-  global $session;
-  clear_cookie();
-  $session = $session_model->Get( $sid );
-  if ( is_null( $session ) ) { return FALSE; } else {
-   if ( intval($session['status'])==1 ) {
-    $session_model->Set( $sid, array( "status"=>0, "logout"=>strtotime('now') ) );
-    return TRUE;
-   }
-  }
- }*/
 
  function Logout( $sess=-1 ) {
   if ( $sess=== -1 ) {
@@ -249,11 +226,11 @@
    if ( !isset($_SESSION['username'])
      || is_null($_SESSION['username'])
      || strlen(trim($_SESSION['username'])) == 0 ) {
-    $ID       = base64_decode( $_COOKIE['session']  );
+    $token    = base64_decode( $_COOKIE['session']  );
     $username = base64_decode( $_COOKIE['username'] );
    } else {
     $username = base64_decode( $_SESSION['username'] );
-    $ID       = base64_decode( $_SESSION['session']  );
+    $token    = base64_decode( $_SESSION['session']  );
    }
 
    if ( $report === true ) $this->print_debug_info();
@@ -263,17 +240,17 @@
    $expired = false;
 
    // This is an expired session.
-   if ( strlen($ID)==0 || strlen($username)==0 ) {
+   if ( strlen($token)==0 || strlen($username)==0 ) {
     $expired = true;
     return FALSE;
    }
 
    // Garner the valid session information.
-   global $session_id;
-   $session_id=$ID;
+   global $session_token;
+   $session_token=$token;
 
    global $session;
-   $session = $session_model->Get($ID);
+   $session = $session_model->ByToken($token);
    plog('check_cookie: session='.var_export($session,true));
 
    // Invalid or expired session
@@ -295,7 +272,7 @@
     return FALSE;
    }
 
-   $this->Refresh($session);
+   $this->Refresh();
 
    global $auth_model;
    global $auth;
@@ -313,6 +290,59 @@
    if ( $report === true ) plog( 'check_cookie(): (end)');
    return TRUE;
   }
+
+/////// The following functions are for non-cookie authentication. (Headers)
+
+/*
+  static public function CreateNew() {
+   if ( false_or_null($user) ) return NULL;
+   global $auth,$auth_database,$session_id,$session,$session_token;
+   $m=new Session($auth_database);
+   $m->Delete(array("r_User"=>$auth['ID']));
+   $new_id=$m->Insert(array(
+    'r_User'        => $auth['ID'],
+    'expiresAt'     => ($expiry=strtotime('now +30 minutes'))
+   ));
+   $session_token=md5(uniqid($new_id,true));
+   $result=$m->Update(array(
+    'session_token' => $session_token
+   ), array("ID"=>$new_id));
+   $session_id=$new_id;
+   return $new_id;
+  }
+ */
+
+  static public function Refresh( $REFRESH_COOKIES = TRUE )  {
+   global $no_session_refresh;
+   if ( $no_session_refresh === TRUE ) return TRUE;
+   global $session_refreshed;
+   if ( $session_refreshed === TRUE ) return TRUE;
+   global $auth_database,$session,$session_token,$session_id,$session_refreshed;
+   if ( false_or_null($session) ) return NULL;
+   $m=new Session($auth_database);
+   if ( strtotime('now') >= intval($session['expiresAt']) ) return FALSE;
+   $m->Update(array('expiresAt'=>strtotime(SESSION_LENGTH)),array('ID'=>$session_id));
+   if ( $REFRESH_COOKIES === TRUE ) {
+    global $database;
+    $u_model=new Auth($database);
+    $u=$u_model->Get($session['r_Auth']);
+    cook( "username", $u['username'], timeout );
+    cook( "session",  $session['token'], timeout );
+   }
+   $session_refreshed = TRUE;
+   return TRUE;
+  }
+
+  static public function LogoutByToken( $session_token ) {
+   global $auth_database;
+   $m=new Session($auth_database);
+   $result=$m->First("session_token",$session_token);
+   if ( false_or_null($result) ) return FALSE;
+   $m->Delete(array("session_token"=>$session_token));
+   return TRUE;
+  }
+
+  
 
  };
 

@@ -17,7 +17,7 @@ if ( strlen(trim($auth['password'])) === 0 // Empty password..
   $session_model->Logout();
   Page::Redirect("login?m=4"); die;
  }
- $session_model->Create($auth['ID']);
+ $session_model->CreateNew($auth['ID'],TRUE);
  Page::Redirect("dash");
 } else {
  plog( "Password incorrect." );

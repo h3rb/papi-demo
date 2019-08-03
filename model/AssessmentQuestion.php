@@ -36,8 +36,8 @@ abstract class AssessmentQuestionType extends Enum {
   static function ValuesArray() {
    global $auth;
    return array(
-    "URLContent" => ""
-    "Image" => "",
+    "URLContent" => "",
+    "ImageURL" => "",
     "Text" => "",
     "Skippable" => 0,
     "Type" => AssessmentQuestionType::MultipleChoice,
