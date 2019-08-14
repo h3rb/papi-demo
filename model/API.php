@@ -3,6 +3,7 @@
  class API {
 
   static function Credentials( $vars ) {
+   if ( isset($vars['forgot']) ) API::Forgot($vars);
    if ( isset($vars['login']) && is_array($vars['login']) ) {
     $un = $vars['login']['username'];
     $pw = $vars['login']['password'];
@@ -71,6 +72,16 @@
    return $vars[$ak];
   }
 
+  static function UnmapValues( $dataName, $in, $map ) {
+   $final = array();
+   $keys = array_keys($map);
+   foreach ( $keys as $k ) {
+    $column = $map[$k][0];
+    if ( isset($in[$column]) ) $final[$k] = $in[$column];
+   }
+   return $final;
+  }
+
   static function MapValues( $dataName, $in, $map, $defaults ) {
    $final = $defaults;
    $keys = array_keys($map);
@@ -112,6 +123,12 @@
     } else API::Failure("Invalid data key '$k' submitted for '$dataName'", -8 );
    }
    return $final;
+  }
+
+  // Checks if auth[id] == object['Owner']
+  static function IsOwner( $object ) {
+   if ( !false_or_null($auth) && intval($auth['ID']) === intval($object['Owner']) ) return TRUE;
+   return FALSE;
   }
 
   // Checks if you are an owner of a particular ID for a table, does a lookup
@@ -165,7 +182,14 @@
   }
 
   // View the profile of a user (include oneself)
-  static function Profile( $vars, $id ) {
+  static function Profile( $vars ) {
+  }
+
+  // Retrieve the values of a single object
+  static function Retrieve( $vars, $subject, $id ) {
+   if ( is($subject,"test") ) Assessment::Retrieve($id);
+   else if ( is($subject,"q") ) AssessmentQuestion::Retrieve($id);
+   else if ( is($subject,"a") ) AssessmentAnswer::Retrieve($id);
   }
 
   // Grade the results for a test taker
@@ -181,89 +205,42 @@
   }
 
  // The following function handles "public" API calls that don't require
- // a valid session.
+ // a valid session.  Code is here but it has been removed from service.
 
- static function PublicAPI( $vars ) {
-  global $headers,$session_id,$session,$session_token,$database,$auth,$is_admin;
-  $j = $vars;
-  $action = $j['action'];
+ static public function Forgot($vars) {
+  $em=$vars["forgot"];
+  $user=Auth::ByEmail($em);
+  if ( false_or_null($user) ) API::Failure("No such user with that email address.",102);
+  $result=Auth::Forgot($user);
+  API::Success( "Forgot email sent.", $result);
+ }
 
+ static public function DoLogout() {
+  global $session;
+  if ( is_null($session) ) API::Failure("Not logged in",-1);
+  if ( Auth::Logout($session) ) API::Failure("Logged out.",1);
+  else API::Failure("Session had expired.",-1);
+ }
 
- switch ( $action ) {
-  case "identify":
-    $json=array(
+ static public function GetIdentify() {
+  global $session_token, $headers, $is_admin;
+  API::Success( array(
       "host"=>$_SERVER["HTTP_HOST"],
       "method"=>$_SERVER["REQUEST_METHOD"],
       "post"=>$_POST,
       "headers"=>$headers,
-      "session_id"=>$session_id,
-      "session"=>$session,
+      "session"=>$session_token,
       "admin"=>$is_admin
-    );
-   break;
-  case "login":
-    if ( !isset($j["username"])
-      || !isset($j["password"]) ) API::Failure("Not enough parameters for action 'login'",102,$g);
-    $un=$j["username"];
-    $pw=$j["password"];
-    $result=Auth::Login($un,$pw);
-    if ( $session_id === FALSE ) API::Failure("Could not log in, no password set, check for password reset email",102);
-    if ( $session_id === NULL ) API::Failure("Invalid username/password.",102);
-    $json=array("user"=>$auth['ID'],"token"=>$session_token,"admin"=>$is_admin);
-   break;
-  case "logout":
-    if ( is_null($session) ) API::Failure("Not logged in",-1);
-    if ( Auth::Logout($session) ) API::Failure("Logged out.",1);
-    else API::Failure("Session had expired.",-1);
-   break;
-  case "forgot":
-    if ( !isset($j["email"]) ) API::Failure("Not enough parameters for action 'forgot'",102);
-    $em=$j["email"];
-    $user=User::ByEmail($em);
-    if ( false_or_null($user) ) API::Failure("No such user with that email address.",102);
-    $result=Auth::Forgot($user);
-    $json=array("result"=>"success","message"=>"Forgot email sent.","values"=>$result);
-   break;
-   case "me":
-    if ( is_null($session) || is_null($auth) ) API::Failure("Not logged in",-1);
-    $json=array( "result"=>array(
-     "user"=>RemoveKeys($auth,array("password","forgotKey","forgotExpires")),
-    ));
-   break;
-  case "users":
-    if ( is_null($session) ) API::Failure("Not logged in",-1);
-    $result=User::GetUsers($auth);
-    if ( false_or_null($result) ) API::Failure("Nothing found",0);
-   break;
-  case "user":
-    if ( is_null($session) ) API::Failure("Not logged in",-1);
-    if ( isset($j["create"]) ) {
-     $filter=array( "firstname", "lastname", "company", "username", "password" );
-     $filtered=OnlyKeys($j["create"],$filter);
-     $result=User::CreateNew($co,$filtered);
-     $json=array("result"=>$result);
-    } else if ( isset($j["update"]) ) {
-     $filter=array( "firstname", "lastname", "company", "username", "password", "email" );
-     $userId=$j["ID"];
-     if ( false_or_null(User::UpdateProtected($auth,$userId,$filtered)) ) API::Failure("Could not complete action 'update' on 'user'",102,$g);
-     $result="success";
-    } else if ( isset($j["get"]) ) {
-     $result=User::FindByID($auth,$j["get"]);
-     if ( false_or_null($result) ) API::Failure("Nothing found",0);
-    } else if ( isset($j["delete"]) ) {
-     $result=User::DeleteByID($auth,$j["delete"]);
-     if ( false_or_null($result) ) API::Failure("Nothing found",0);
-    }
-    if ( false_or_null($result) ) API::Failure("Nothing found",0);
-    $json=array("result"=>$result);
-   break;
-  case "datetime":
-    $json["result"]=array( "currentTime"=>array("__Type:"=>"Date","iso"=>$TODAY) );
-   break;
-  default: return FALSE; break;
-  }
-  API::Success("", $json);
+    )
+  );
  }
+
+  static public function GetDateTime() {
+   API::Success( array(
+     "currentTime"=>array("__Type:"=>"Date","iso"=>strtotime('r'),"time"=>time())
+    )
+   );
+  }
 
  // Failure sends code 400
 

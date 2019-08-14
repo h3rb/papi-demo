@@ -49,4 +49,11 @@
    $m->Set($id,$values);
    API::Success("Answer modified.", array("id"=>$id));
   }
+
+  static function Retrieve( $id ) {
+   global $database;
+   $m = new AssessmentAnswer($database);
+   $o = $m->Get($id);
+   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( "AssessmentAnswer", $o, AssessmentAnswer::JSONMap() ));
+  }
  };

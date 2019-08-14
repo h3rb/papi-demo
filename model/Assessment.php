@@ -83,4 +83,11 @@ abstract class AssessmentPassMode extends Enum {
    $m->Set($id,$values);
    API::Success("Assessment modified.", array("id"=>$id));
   }
+  static function Retrieve( $id ) {
+   global $database;
+   $m = new Assessment($database);
+   $o = $m->Get($id);
+   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( "Assessment", $o, Assessment::JSONMap() ));
+  }
+
  };

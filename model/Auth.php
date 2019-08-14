@@ -24,6 +24,13 @@
    return $this->First( "username", $un );
   }
 
+  function ByEmail( $em ) {
+   global $auth_database;
+   $model = new Auth($auth_database);
+   plog('Find user: '.$em);
+   return $model->First( "email", $em );
+  }
+
   static function PasswordIsExpired( $auth ) {
    return ( strtotime('now') >= $auth['password_expiry'] );
   }
@@ -59,6 +66,11 @@
    if ( !isset($auth['acl']) ) return FALSE;
    plog('Checking ACL: '.(is_array($required)?implode(',',$required):$required));
    return ACL::has($auth['acl'],$required);
+  }
+
+  static function Forgot( $user ) {
+   // TODO: Add sending an email here.
+   return TRUE;
   }
 
  };

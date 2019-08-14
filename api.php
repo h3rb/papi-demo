@@ -54,14 +54,21 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
   API::Remove($g,$subject,$id);
  } else if ( $action == 'modify' ) { // attempts to modify an object
   $subject=API::GetValue($g,'subject',-3);
-  $id=API::GetValue($g,'id',-4);
+  $id=API::GetValue($g,'for',-4);
   API::Modify($g,$subject,$id);
  } else if ( $action == 'update' ) { // attempts to update a test session
-  $id=API::GetValue($g,'id',-3);
+  $id=API::GetValue($g,'for',-4);
   API::Update($g,$id);
- } else if ( $action == 'profile' ) {
-  $id=API::GetValue($g,'id',-3);
-  API::Profile($g,$id);
+ } else if ( $action == 'profile' ) { // gets a profile user or oneself
+  API::Profile($g);
+ } else if ( $action == 'get' ) { // gets a single object
+  $subject=API::GetValue($g,'subject',-3);
+  $id=API::GetValue($g,'for',-4);
+  API::Retrieve($g,$subject,$id);
+ } else if ( $action == 'datetime' ) {
+  API::GetDateTime();
+ } else if ( $action == 'identify' ) {
+  API::GetIdentify();
  }
 
  API::Failure("Unknown request or badly formed request.",-99);

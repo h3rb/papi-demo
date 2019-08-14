@@ -78,4 +78,11 @@ abstract class AssessmentQuestionType extends Enum {
   $m->Set($id,$values);
   API::Success("Question modified.", array("id"=>$id));
   }
+
+  static function Retrieve( $id ) {
+   global $database;
+   $m = new AssessmentQuestion($database);
+   $o = $m->Get($id);
+   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( "AssessmentQuestion", $o, AssessmentQuestion::JSONMap() ));
+  }
  };
