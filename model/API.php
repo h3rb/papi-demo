@@ -235,6 +235,13 @@
   );
  }
 
+  static public function GravatarSupport( $vars ) {
+   if ( isset( $vars['get'] ) ) { // gets gravatar URL
+   } else if ( isset( $vars['set'] ) ) { // sets gravatar email
+   } else if ( isset( $vars['remove'] ) ) { // deactivates gravatar
+   }
+  }
+
   static public function GetDateTime() {
    API::Success( array(
      "currentTime"=>array("__Type:"=>"Date","iso"=>strtotime('r'),"time"=>time())
