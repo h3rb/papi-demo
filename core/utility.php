@@ -13,6 +13,16 @@ if ( !function_exists('plog') ) {
  }
 }
 
+
+if ( !function_exists('endsWith') ) {
+ // search forward starting from end minus needle length characters
+ function endsWith($haystack, $needle) {
+  $len=strlen($needle);
+  return matches(substr($haystack, strlen($haystack)-$len, $len), $needle);
+ }
+}
+
+
 if ( !function_exists('a') ) {
  function a() {
   return func_get_args();
@@ -80,7 +90,7 @@ if ( !function_exists('include_all') ) {
   if ( folder_exists($folder) ) {
    $includes=scandir($folder);
    foreach ( $includes as $include )
-    if ( contains($include,".php") )
+    if ( endsWith($include,".php") )
      include_once($folder.$include);
   }
  }
@@ -970,16 +980,6 @@ if ( !function_exists('redirect') ) {
         . $url . "'; } setTimeout('delayer()', '" . $delay . "'" . '); </script>';
  }
 }
-
-
-if ( !function_exists('endsWith') ) {
- // search forward starting from end minus needle length characters
- function endsWith($haystack, $needle) {
-  $len=strlen($needle);
-  return matches(substr($haystack, strlen($haystack)-$len, $len), $needle);
- }
-}
-
 
 if ( !function_exists('Post') ) {
  function Post($url,$fields) {
