@@ -4,6 +4,7 @@
 
   static function Credentials( $vars ) {
    if ( isset($vars['forgot']) ) API::Forgot($vars);
+   if ( isset($vars['key']) ) API::ValidateToken($vars);
    if ( isset($vars['login']) && is_array($vars['login']) ) {
     $un = $vars['login']['username'];
     $pw = $vars['login']['password'];
@@ -198,6 +199,11 @@
 
   // Invalidated the results of a taken test or certification (de-certify)
   static function Invalidate( $vars, $id ) {
+  }
+
+  static function ValidateToken( $vars ) {
+   if ( Session::IsValid($vars['key']) ) API::Success("Session is valid.");
+   API::Failure("Session is not valid.");
   }
 
   // Validate (assert) the certification of a test taker

@@ -35,7 +35,10 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 
  API::Credentials($g);
 
- if ( false_or_null($session) ) API::Failure("Not logged in or no valid API credential.",-1);
+ if ( false_or_null($session) ) {
+  if ( isset($gp['data']) && isset($gp['data']['key']) ) API::ValidateToken($gp['data']);
+  API::Failure("Not logged in or no valid API credential.",-1);
+ }
 
  // var_dump($g); die;
 

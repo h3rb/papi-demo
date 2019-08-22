@@ -39,6 +39,20 @@
 
   <!-- Google Font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+  
+  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+  <script type="text/javascript" src="js/js.cookie.min.js"></script>
+  <script type="text/javascript" src="js/api.js"></script>
+  <script type="text/javascript" src="js/app.js"></script>
+  <script type="text/javascript">
+   $(document).ready(function(){
+   var micertify_api = new MicertifyAPI();
+   micertify_api.Init();
+   var micertify_app = new MicertifyApp(micertify_api);
+   micertify_app.Init();
+   console.log(micertify_app);
+   });
+  </script>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 <div class="wrapper">

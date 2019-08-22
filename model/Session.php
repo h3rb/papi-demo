@@ -321,7 +321,7 @@
    if ( false_or_null($session) ) return NULL;
    $m=new Session($auth_database);
    if ( strtotime('now') >= intval($session['expiresAt']) ) return FALSE;
-   $m->Update(array('expiresAt'=>strtotime(SESSION_LENGTH)),array('ID'=>$session_id));
+   $m->Update(array('requests'=>intval($session['requests'])+1,'expiresAt'=>strtotime(SESSION_LENGTH)),array('ID'=>$session_id));
    if ( $REFRESH_COOKIES === TRUE ) {
     global $database;
     $u_model=new Auth($database);
@@ -342,7 +342,18 @@
    return TRUE;
   }
 
-  
+  static public function IsValid( $token ) {
+   global $session,$session_id;
+   $session = Session::ByToken($token);
+//   if ( false_or_null($session) ) { Session::ByToken(base64_decode($token)); }
+   if ( false_or_null($session) ) {
+    return FALSE;
+   }
+   if ( Session::TimedOut($session) ) return FALSE;
+   $session_id = $session['ID'];
+   Session::Refresh();
+   return TRUE;
+  }
 
  };
 
