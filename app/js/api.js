@@ -8,6 +8,8 @@ var $_GET = getparams(window.location.search);
 
 var api = null;
 
+function ClearSuperGlobals() { $_COOKIE = [];  $_GET = []; }
+
 // Read a page's GET URL variables and return them as an associative array.
 function getparams() {
     var vars = [], hash;
@@ -39,6 +41,8 @@ class MicertifyAPI {
 		this.sessionHistory = [];
 		this.requestHistory = [];
 		this.messageHistory = [];
+		this.retries = 1; // Consumed when used during initial sync.
+		this.app = null;
 		api = this;
     }
 	
@@ -97,15 +101,29 @@ class MicertifyAPI {
 		this.token=t;
 		this.Request( { key: t },
 			function(e) { api.SetSession(api.token); },
-			function(e){ this.session=null; },
-			function(e) { /* We've been logged out? */  this.session=null; setTimeout(function(){api.CheckTokenState()},5000); }
+			function(e){ api.session=null; },
+			function(e) { if ( api.retries > 0 ) {
+					api.retries--; /* We've been logged out? */  api.session=null;
+					setTimeout(function(){api.CheckTokenState()},5000); 
+				} else this.app.NoSessionStateCallback();
+			}
 		);
 	}
 	
 	CheckTokenState() {
-		if ( defined($_COOKIE["session"]) ) { this.username = atob($_COOKIE["username"]); this.password=false; this.ValidateToken( atob($_COOKIE["session"]) ); }
-		else if ( defined($_GET["token"]) ) this.ValidateToken( $_GET["token"] );
-		else this.session = null;
+		if ( defined($_COOKIE["session"]) ) {
+			console.log("CheckTokenState: by cookie");
+			api.username = atob($_COOKIE["username"]);
+			api.password=false;
+			api.ValidateToken( atob($_COOKIE["session"]) );
+		} else if ( defined($_GET["token"]) ) {
+			console.log("CheckTokenState: by url");
+			api.ValidateToken( $_GET["token"] );
+		} else {
+			console.log("CheckTokenState: none found, user must login");
+			api.session = null;
+			api.app.NoSessionStateCallback();
+		}
 	}
 	
 	Login() {

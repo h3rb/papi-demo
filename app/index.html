@@ -39,20 +39,11 @@
 
   <!-- Google Font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
-  
-  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+
   <script type="text/javascript" src="js/js.cookie.min.js"></script>
   <script type="text/javascript" src="js/api.js"></script>
   <script type="text/javascript" src="js/app.js"></script>
-  <script type="text/javascript">
-   $(document).ready(function(){
-   var micertify_api = new MicertifyAPI();
-   micertify_api.Init();
-   var micertify_app = new MicertifyApp(micertify_api);
-   micertify_app.Init();
-   console.log(micertify_app);
-   });
-  </script>
+
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 <div class="wrapper">
@@ -61,7 +52,7 @@
     <!-- Logo -->
     <a href="index2.html" class="logo">
       <!-- mini logo for sidebar mini 50x50 pixels -->
-      <span class="logo-mini"><b>A</b>LT</span>
+      <span class="logo-mini"><b><span class="logo-mi">Mi</span><span class="logo-certify">C</span></b></span>
       <!-- logo for regular state and mobile devices -->
       <span class="logo-lg"><b><span class="logo-mi">Mi</span><span class="logo-certify">Certify</span></b></span>
     </a>
@@ -325,198 +316,103 @@
   <aside class="main-sidebar">
     <!-- sidebar: style can be found in sidebar.less -->
     <section class="sidebar">
-      <!-- Sidebar user panel -->
-      <div class="user-panel">
-        <div class="pull-left image">
-          <img src="dist/img/user2-160x160.jpg" class="img-circle" alt="User Image">
-        </div>
-        <div class="pull-left info">
-          <p>Alexander Pierce</p>
-          <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
-        </div>
-      </div>
-      <!-- search form -->
-      <form action="#" method="get" class="sidebar-form">
-        <div class="input-group">
-          <input type="text" name="q" class="form-control" placeholder="Search...">
-          <span class="input-group-btn">
-                <button type="submit" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
-                </button>
-              </span>
-        </div>
-      </form>
       <!-- /.search form -->
       <!-- sidebar menu: : style can be found in sidebar.less -->
       <ul class="sidebar-menu" data-widget="tree">
-        <li class="header">MAIN NAVIGATION</li>
-        <li class="active treeview">
+        <!--li class="active treeview">
           <a href="#">
             <i class="fa fa-dashboard"></i> <span>Dashboard</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
           </a>
-          <ul class="treeview-menu">
-            <li class="active"><a href="index.html"><i class="fa fa-circle-o"></i> Dashboard v1</a></li>
-            <li><a href="index2.html"><i class="fa fa-circle-o"></i> Dashboard v2</a></li>
-          </ul>
-        </li>
-        <li class="treeview">
-          <a href="#">
-            <i class="fa fa-files-o"></i>
-            <span>Layout Options</span>
-            <span class="pull-right-container">
-              <span class="label label-primary pull-right">4</span>
-            </span>
-          </a>
-          <ul class="treeview-menu">
-            <li><a href="pages/layout/top-nav.html"><i class="fa fa-circle-o"></i> Top Navigation</a></li>
-            <li><a href="pages/layout/boxed.html"><i class="fa fa-circle-o"></i> Boxed</a></li>
-            <li><a href="pages/layout/fixed.html"><i class="fa fa-circle-o"></i> Fixed</a></li>
-            <li><a href="pages/layout/collapsed-sidebar.html"><i class="fa fa-circle-o"></i> Collapsed Sidebar</a></li>
-          </ul>
-        </li>
+        </li-->
         <li>
-          <a href="pages/widgets.html">
-            <i class="fa fa-th"></i> <span>Widgets</span>
-            <span class="pull-right-container">
-              <small class="label pull-right bg-green">new</small>
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.messages);">
+            <i class="fa fa-envelope"></i> <span>Messages</span>
+            <span class="pull-right-container" id="mcapp-sidebar-messages-count">
+              <small class="label pull-right bg-yellow">12</small>
             </span>
           </a>
         </li>
-        <li class="treeview">
-          <a href="#">
-            <i class="fa fa-pie-chart"></i>
-            <span>Charts</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+        <li class="header" id="mcapp-sidebar-section-tasks">TASKS</li>
+        <li id="mcapp-sidebar-tasks-grading"><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.tasks.grading);"><i class="fa fa-exclamation-circle text-red"></i> <span>Tests Need Grading</span></a></li>
+        <li id="mcapp-sidebar-tasks-drafts"><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.tasks.drafts);"><i class="fa fa-check-circle text-yellow"></i> <span>Fix Working Drafts</span></a></li>
+        <li id="mcapp-sidebar-tasks-continue"><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.tasks.continue);"><i class="fa fa-chevron-circle-right text-aqua"></i> <span>Continue Tests in Progress</span></a></li>	  
+        <li class="header" id="mcapp-sidebar-section-certified">GET CERTIFIED</li>
+
+      <!-- search form -->
+      <form action="#" method="get" class="sidebar-form" id="mcapp-sidebar-search-form">
+        <div class="input-group">
+          <input type="text" name="q" class="form-control" placeholder="Search...">
+          <span class="input-group-btn">
+                <button onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.search);" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
+                </button>
+              </span>
+        </div>
+      </form>		
+        <li class="treeview" id="mcapp-sidebar-take-tests">
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.browse);">
+            <i class="fa fa-edit"></i> <span>Take Tests</span>
+            <span class="pull-right-container" id="mcapp-sidebar-tests-count">
+              <span class="label label-primary pull-right bg-red">4</span>
             </span>
           </a>
-          <ul class="treeview-menu">
-            <li><a href="pages/charts/chartjs.html"><i class="fa fa-circle-o"></i> ChartJS</a></li>
-            <li><a href="pages/charts/morris.html"><i class="fa fa-circle-o"></i> Morris</a></li>
-            <li><a href="pages/charts/flot.html"><i class="fa fa-circle-o"></i> Flot</a></li>
-            <li><a href="pages/charts/inline.html"><i class="fa fa-circle-o"></i> Inline charts</a></li>
-          </ul>
         </li>
-        <li class="treeview">
-          <a href="#">
+        <li class="treeview" id="mcapp-sidebar-certifications">
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.certified);">
+            <i class="fa fa-certificate"></i> <span>Certified</span>
+            <span class="pull-right-container">
+              <span class="label label-primary pull-right bg-green">4</span>
+            </span>
+          </a>
+        </li>
+        <li class="treeview" id="mcapp-sidebar-results">
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.results);">
+            <i class="fa fa-pie-chart"></i> <span>Your Results</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-right pull-right"></i>
+            </span>
+          </a>
+        </li>
+        <li class="treeview" id="mmcapp-sidebar-download">
+          <a href="#" onclilck="javascript:mcapp.Sidebar(mcapp.codes.sidebar.download);">
             <i class="fa fa-laptop"></i>
-            <span>UI Elements</span>
+            <span>Download Client</span>
             <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+              <i class="fa fa-download pull-right"></i>
             </span>
           </a>
-          <ul class="treeview-menu">
-            <li><a href="pages/UI/general.html"><i class="fa fa-circle-o"></i> General</a></li>
-            <li><a href="pages/UI/icons.html"><i class="fa fa-circle-o"></i> Icons</a></li>
-            <li><a href="pages/UI/buttons.html"><i class="fa fa-circle-o"></i> Buttons</a></li>
-            <li><a href="pages/UI/sliders.html"><i class="fa fa-circle-o"></i> Sliders</a></li>
-            <li><a href="pages/UI/timeline.html"><i class="fa fa-circle-o"></i> Timeline</a></li>
-            <li><a href="pages/UI/modals.html"><i class="fa fa-circle-o"></i> Modals</a></li>
-          </ul>
         </li>
-        <li class="treeview">
-          <a href="#">
-            <i class="fa fa-edit"></i> <span>Forms</span>
+        <li class="header" id="mcapp-sidebar-section-certifier">CERTIFIER</li>
+        <li class="treeview" id="mcapp-sidebar-needs-grading">
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.grading);">
+            <i class="fa fa-files-o"></i>
+            <span>Needs Graded</span>
             <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+              <span class="label label-primary pull-right" id="mcapp-sidebar-needs-grading-count">4</span>
             </span>
           </a>
-          <ul class="treeview-menu">
-            <li><a href="pages/forms/general.html"><i class="fa fa-circle-o"></i> General Elements</a></li>
-            <li><a href="pages/forms/advanced.html"><i class="fa fa-circle-o"></i> Advanced Elements</a></li>
-            <li><a href="pages/forms/editors.html"><i class="fa fa-circle-o"></i> Editors</a></li>
-          </ul>
-        </li>
-        <li class="treeview">
-          <a href="#">
-            <i class="fa fa-table"></i> <span>Tables</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
-          </a>
-          <ul class="treeview-menu">
-            <li><a href="pages/tables/simple.html"><i class="fa fa-circle-o"></i> Simple tables</a></li>
-            <li><a href="pages/tables/data.html"><i class="fa fa-circle-o"></i> Data tables</a></li>
-          </ul>
-        </li>
-        <li>
-          <a href="pages/calendar.html">
-            <i class="fa fa-calendar"></i> <span>Calendar</span>
+        </li>	
+        <li class="treeview" id="mcapp-sidebar-programs">
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.programs);">
+            <i class="fa fa-clipboard"></i> <span>Your Programs</span>
             <span class="pull-right-container">
               <small class="label pull-right bg-red">3</small>
-              <small class="label pull-right bg-blue">17</small>
+              <small class="label pull-right bg-green">17</small>
             </span>
           </a>
         </li>
-        <li>
-          <a href="pages/mailbox/mailbox.html">
-            <i class="fa fa-envelope"></i> <span>Mailbox</span>
-            <span class="pull-right-container">
-              <small class="label pull-right bg-yellow">12</small>
-              <small class="label pull-right bg-green">16</small>
-              <small class="label pull-right bg-red">5</small>
-            </span>
-          </a>
-        </li>
-        <li class="treeview">
+        <!--li>
           <a href="#">
-            <i class="fa fa-folder"></i> <span>Examples</span>
+            <i class="fa fa-clipboard"></i> <span>Create Tests</span>
             <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
+              <small class="label pull-right bg-red">3</small>
+              <small class="label pull-right bg-green">17</small>
             </span>
           </a>
-          <ul class="treeview-menu">
-            <li><a href="pages/examples/invoice.html"><i class="fa fa-circle-o"></i> Invoice</a></li>
-            <li><a href="pages/examples/profile.html"><i class="fa fa-circle-o"></i> Profile</a></li>
-            <li><a href="pages/examples/login.html"><i class="fa fa-circle-o"></i> Login</a></li>
-            <li><a href="pages/examples/register.html"><i class="fa fa-circle-o"></i> Register</a></li>
-            <li><a href="pages/examples/lockscreen.html"><i class="fa fa-circle-o"></i> Lockscreen</a></li>
-            <li><a href="pages/examples/404.html"><i class="fa fa-circle-o"></i> 404 Error</a></li>
-            <li><a href="pages/examples/500.html"><i class="fa fa-circle-o"></i> 500 Error</a></li>
-            <li><a href="pages/examples/blank.html"><i class="fa fa-circle-o"></i> Blank Page</a></li>
-            <li><a href="pages/examples/pace.html"><i class="fa fa-circle-o"></i> Pace Page</a></li>
-          </ul>
-        </li>
-        <li class="treeview">
-          <a href="#">
-            <i class="fa fa-share"></i> <span>Multilevel</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
-          </a>
-          <ul class="treeview-menu">
-            <li><a href="#"><i class="fa fa-circle-o"></i> Level One</a></li>
-            <li class="treeview">
-              <a href="#"><i class="fa fa-circle-o"></i> Level One
-                <span class="pull-right-container">
-                  <i class="fa fa-angle-left pull-right"></i>
-                </span>
-              </a>
-              <ul class="treeview-menu">
-                <li><a href="#"><i class="fa fa-circle-o"></i> Level Two</a></li>
-                <li class="treeview">
-                  <a href="#"><i class="fa fa-circle-o"></i> Level Two
-                    <span class="pull-right-container">
-                      <i class="fa fa-angle-left pull-right"></i>
-                    </span>
-                  </a>
-                  <ul class="treeview-menu">
-                    <li><a href="#"><i class="fa fa-circle-o"></i> Level Three</a></li>
-                    <li><a href="#"><i class="fa fa-circle-o"></i> Level Three</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-            <li><a href="#"><i class="fa fa-circle-o"></i> Level One</a></li>
-          </ul>
-        </li>
-        <li><a href="https://wiki.micertify.com/"><i class="fa fa-book"></i> <span>Documentation</span></a></li>
-        <li class="header">LABELS</li>
-        <li><a href="#"><i class="fa fa-circle-o text-red"></i> <span>Important</span></a></li>
-        <li><a href="#"><i class="fa fa-circle-o text-yellow"></i> <span>Warning</span></a></li>
-        <li><a href="#"><i class="fa fa-circle-o text-aqua"></i> <span>Information</span></a></li>
+        </li-->
+        <li class="header" id="mcapp-sidebar-section-help">GET HELP</li>
+        <li id="mcapp-sidebar-gettingstarted">><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.gettingstarted);"><i class="fa fa-toggle-right"></i> <span>Getting Started</span></a></li>
+        <li id="mcapp-sidebar-reference"><a href="https://micertify.com/reference" target="_blank"><i class="fa fa-book"></i> <span>App Reference</span></a></li>
+        <li id="mcapp-sidebar-support">><a href="https://micertify.com/support" target="_blank"><i class="fa fa-question-circle"></i> <span>Get Support</span></a></li>
       </ul>
     </section>
     <!-- /.sidebar -->
@@ -1038,6 +934,74 @@
       </div>
       <!-- /.row (main row) -->
 
+        <div class="modal fade" id="modal-login">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Default Modal</h4>
+              </div>
+              <div class="modal-body">
+
+<div class="login-box">
+  <div class="login-logo">
+      <span class="logo-lg"><b><span class="logo-mi">Mi</span><span class="logo-certify">Certify</span></b></span>
+  </div>
+  <!-- /.login-logo -->
+  <div class="login-box-body">
+    <p class="login-box-msg">Sign in to continue</p>
+
+    <form action="../../index2.html" method="post">
+      <div class="form-group has-feedback">
+        <input type="email" class="form-control" placeholder="Email">
+        <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+      </div>
+      <div class="form-group has-feedback">
+        <input type="password" class="form-control" placeholder="Password">
+        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+      </div>
+      <div class="row">
+        <div class="col-xs-8">
+          <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button> 
+        </div>
+        <!-- /.col -->
+        <div class="col-xs-4">
+          New here? <a href="/register">Register</a>
+        </div>
+        <!-- /.col -->
+      </div>
+    </form>
+
+    <div class="social-auth-links text-center">
+      <p>- OR -</p>
+      <a href="#" class="btn btn-block btn-social btn-facebook btn-flat"><i class="fa fa-facebook"></i> Sign in using
+        Facebook</a>
+      <a href="#" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using
+        Google+</a>
+    </div>
+    <!-- /.social-auth-links -->
+
+    <a href="#">I forgot my password</a><br>
+    <a href="register.html" class="text-center">Register a new membership</a>
+
+  </div>
+  <!-- /.login-box-body -->
+</div>
+<!-- /.login-box -->
+			  
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+              </div>
+            </div>
+            <!-- /.modal-content -->
+          </div>
+          <!-- /.modal-dialog -->
+        </div>
+        <!-- /.modal -->
+		
     </section>
     <!-- /.content -->
   </div>
@@ -1282,5 +1246,15 @@
 <script src="dist/js/pages/dashboard.js"></script>
 <!-- AdminLTE for demo purposes -->
 <script src="dist/js/demo.js"></script>
+  
+  <!--script type="text/javascript" src="js/jquery-3.4.1.min.js"></script-->  <!-- maybe this not necessary? -->
+  <script type="text/javascript">
+   $(document).ready(function(){
+	var micertify_api = new MicertifyAPI();
+	var micertify_app = new MicertifyApp(micertify_api);
+	var mcapp=micertify_app;
+	mcapp.Init();
+   });
+  </script>
 </body>
 </html>
