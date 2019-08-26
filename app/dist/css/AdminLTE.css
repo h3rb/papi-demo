@@ -2049,9 +2049,9 @@ a:focus {
 .box-input {
   max-width: 200px;
 }
-.modal .panel-body {
+/*.modal .panel-body {
   color: #444;
-}
+}*/
 /*
  * Component: Info Box
  * -------------------
@@ -3012,15 +3012,17 @@ table.text-center th {
  * Component: modal
  * ----------------
  */
-.modal {
+/*.modal {
   background: rgba(0, 0, 0, 0.3);
-}
-.modal-content {
+}*/
+
+/*.modal-content {
   border-radius: 0;
   -webkit-box-shadow: 0 2px 3px rgba(0, 0, 0, 0.125);
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.125);
   border: 0;
 }
+
 @media (min-width: 768px) {
   .modal-content {
     -webkit-box-shadow: 0 2px 3px rgba(0, 0, 0, 0.125);
@@ -3053,6 +3055,9 @@ table.text-center th {
 .modal-danger .modal-footer {
   border-color: #c23321;
 }
+
+*/
+
 /*
  * Component: Social Widgets
  * -------------------------

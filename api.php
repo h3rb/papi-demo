@@ -27,7 +27,7 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 
  $gp=getpost();
 
- if ( !isset($gp['data']) ) API::Failure("No data provided.",-69);
+ if ( !isset($gp['data']) ) API::Failure("No data provided.",ERR_NO_DATA);
 
  $g = json_decode($gp["data"],true);
 
@@ -35,15 +35,18 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 
  API::Credentials($g);
 
+ if ( isset($gp['data']) && isset($gp['data']['key']) ) API::ValidateToken($gp['data']);
  if ( false_or_null($session) ) {
-  if ( isset($gp['data']) && isset($gp['data']['key']) ) API::ValidateToken($gp['data']);
-  API::Failure("Not logged in or no valid API credential.",-1);
+  if ( isset($gp['data']) && isset($gp['data']['login']) ) API::Credentials($gp);
+  else
+  API::Failure("Not logged in or no valid API credential. ".str_replace("\n","",print_r($gp,true)),ERR_INVALID_CREDENTIALS);
  }
 
  // var_dump($g); die;
 
+ if ( isset($g['data']) && isset($g['data']['action']) ) $g=$g['data'];
 
- if ( !isset($g['action']) || false_or_null($g['action']) ) API::Failure("No action provided.",-2);
+ if ( !isset($g['action']) || false_or_null($g['action']) ) API::Failure("No action provided. ".str_replace("\n","",print_r($gp,true)),ERR_NO_ACTION);
 
  $action = API::GetValue($g,'action',-3);
  if ( $action == 'list' ) { // returns a list of objects of a particular type
@@ -76,4 +79,4 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
   API::GetIdentify();
  }
 
- API::Failure("Unknown request or badly formed request.",-99);
+ API::Failure("Unknown request or badly formed request.",ERR_UNKNOWN_REQUEST);

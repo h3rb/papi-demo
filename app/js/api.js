@@ -1,5 +1,6 @@
 
 var $_COOKIE = Cookies.get();
+function BakeCookie( name, value ) { var date = new Date(); var dateString = date.toUTCString();	Cookies.set(name, value, { expires: dateString }); }
 //console.log($_COOKIE);
 
 var $_GET = getparams(window.location.search);
@@ -17,7 +18,6 @@ function getparams() {
     for(var i = 0; i < hashes.length; i++) { hash = hashes[i].split('='); vars[hash[0]] = hash[1]; }
     return vars;
 }
-var Base64={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(e){var t="";var n,r,i,s,o,u,a;var f=0;e=Base64._utf8_encode(e);while(f<e.length){n=e.charCodeAt(f++);r=e.charCodeAt(f++);i=e.charCodeAt(f++);s=n>>2;o=(n&3)<<4|r>>4;u=(r&15)<<2|i>>6;a=i&63;if(isNaN(r)){u=a=64}else if(isNaN(i)){a=64}t=t+this._keyStr.charAt(s)+this._keyStr.charAt(o)+this._keyStr.charAt(u)+this._keyStr.charAt(a)}return t},decode:function(e){var t="";var n,r,i;var s,o,u,a;var f=0;e=e.replace(/++[++^A-Za-z0-9+/=]/g,"");while(f<e.length){s=this._keyStr.indexOf(e.charAt(f++));o=this._keyStr.indexOf(e.charAt(f++));u=this._keyStr.indexOf(e.charAt(f++));a=this._keyStr.indexOf(e.charAt(f++));n=s<<2|o>>4;r=(o&15)<<4|u>>2;i=(u&3)<<6|a;t=t+String.fromCharCode(n);if(u!=64){t=t+String.fromCharCode(r)}if(a!=64){t=t+String.fromCharCode(i)}}t=Base64._utf8_decode(t);return t},_utf8_encode:function(e){e=e.replace(/\r\n/g,"n");var t="";for(var n=0;n<e.length;n++){var r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r)}else if(r>127&&r<2048){t+=String.fromCharCode(r>>6|192);t+=String.fromCharCode(r&63|128)}else{t+=String.fromCharCode(r>>12|224);t+=String.fromCharCode(r>>6&63|128);t+=String.fromCharCode(r&63|128)}}return t},_utf8_decode:function(e){var t="";var n=0;var r=c1=c2=0;while(n<e.length){r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r);n++}else if(r>191&&r<224){c2=e.charCodeAt(n+1);t+=String.fromCharCode((r&31)<<6|c2&63);n+=2}else{c2=e.charCodeAt(n+1);c3=e.charCodeAt(n+2);t+=String.fromCharCode((r&15)<<12|(c2&63)<<6|c3&63);n+=3}}return t}}
 function get_protocol() { return location.protocol; }
 function is_ssl() { return (get_protocol() === 'https:'); }
 function getLocalTime() { var d=new Date(); return d.getMilliseconds(); }
@@ -43,52 +43,77 @@ class MicertifyAPI {
 		this.messageHistory = [];
 		this.retries = 1; // Consumed when used during initial sync.
 		this.app = null;
+		this.errorcode = this.GetErrorCodes();
 		api = this;
-    }
+    }	
 	
-	Init() {
-		this.CheckTokenState();
+	Init() {}
+	
+	GetErrorCodes() { 
+ 	return {
+      ERR_SESSION_INVALID:-88,
+      ERR_SESSION_EXPIRED:-89,
+      ERR_BAD_HEADERS:-69,
+      ERR_INVALID_CREDENTIALS:-1,
+      ERR_NO_ACTION:-2,
+      ERR_BAD_BOOLEAN:-5,
+	  ERR_INVALID_VALUE_KEY:-6,
+      ERR_CREATE_SET_EMPTY:-7,
+      ERR_MODIFY_SET_EMPTY:-8,
+      ERR_REQUIRED_VALUE_OMITTED:-9,
+      ERR_WRONG_TYPE_FOR_VALUE:-10,
+      ERR_MISSING_ID:-11,
+      ERR_NOT_OWNER:-12,
+      ERR_NO_DATA:-13,
+      ERR_UNKNOWN_REQUEST:-14,
+      ERR_UNABLE_TO_CREATE:-15,
+      ERR_INVALID_PASSWORD:-121,
+      ERR_EXPIRED_PASSWORD:-122,
+      ERR_NO_SUCH_USER_FOR_EMAIL:-123,
+      ERR_USER_INVALID:-124,
+      ERR_SUCCESS:1
+ 	};
 	}
 	
 	SetSession( token ) { this.session=token; this.sessionHistory.push(Timestamped(token)); }
 		
 	ConstructRequestHeaders( r ) {
 		r.setRequestHeader("X-Papi-Application-Id", "micertify.com");
-		if ( this.session !== null ) r.setRequestHeader( "X-Papi-Session-Token", this.session );
-		if ( this.admin !== null ) r.setRequestHeader( "X-Papi-Admin-Token", this.admin );
+		if ( api.session !== null ) r.setRequestHeader( "X-Papi-Session-Token", api.session );
+		if ( api.admin !== null ) r.setRequestHeader( "X-Papi-Admin-Token", api.admin );
 	}
 	
 	DefaultSuccess(data) { 
 	 console.log("REQUEST: success: ");
-	 if ( defined(data.message) ) this.messageHistory.push(Timestamped(data));
+	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
 	 console.log(data);	 
 	}
 
-	DefaultDone(e) { 
+	DefaultDone(data) { 
 	 console.log("REQUEST: done:");
-	 if ( defined(data.message) ) this.messageHistory.push(Timestamped(data));
-	 console.log(e);
+	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
+	 console.log(data);
 	}
 
-	DefaultError(e) { 
+	DefaultError(data) { 
 //	 alert("Error!");
 	 console.log("REQUEST: error!:");
-	 if ( defined(data.message) ) this.messageHistory.push(Timestamped(data));
-	 console.log(e);
+	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
+	 console.log(data);
 	}
 	
-	EmptyFunction(e) {
+	EmptyFunction(data) {
      console.log("No output.");
 	}
 	
-	Request( post_data, successFunc= this.DefaultSuccess, doneFunc= this.DefaultDone, errorFunc = this.DefaultError ) {
-		this.requestHistory.push(Timestamped({ data: post_data }));
+	Request( post_data, successFunc= api.DefaultSuccess, doneFunc= api.DefaultDone, errorFunc = api.DefaultError ) {
+		api.requestHistory.push(Timestamped({ data: post_data }));
 		$.ajax({
 			type: "POST",
-			url: this.api_url,
+			url: api.api_url,
 			data: { data: post_data },
 			dataType: "json",
-			beforeSend: function(request){api.ConstructRequestHeaders(request)},
+			beforeSend: function(request){api.ConstructRequestHeaders(request);},
 			done: doneFunc,
 			success: successFunc,
 			error: errorFunc
@@ -97,28 +122,36 @@ class MicertifyAPI {
 	
 	Successful(e) { return ( e.result === "success" ); }
 	
-	ValidateToken ( t ) {
-		this.token=t;
-		this.Request( { key: t },
-			function(e) { api.SetSession(api.token); },
+	ValidateToken ( t, bake=false ) {
+		api.token=t;
+		api.Request( { key: t },
+			bake
+			? function(e) { api.SetSession(api.token); BakeCookie("username",btoa(api.username)); BakeCookie("session",btoa(api.token)); $_COOKIE=Cookies.get(); }
+			: function(e) { api.SetSession(api.token); },
 			function(e){ api.session=null; },
-			function(e) { if ( api.retries > 0 ) {
+			function(e) {
+				e.data = $.parseJSON(e.responseText);
+				if ( defined(e.data.error) && e.data.error == api.errorcode.ERR_INVALID_CREDENTIALS ) api.app.NoSessionStateCallback();
+    			else if ( api.retries > 0 ) {
 					api.retries--; /* We've been logged out? */  api.session=null;
 					setTimeout(function(){api.CheckTokenState()},5000); 
-				} else this.app.NoSessionStateCallback();
+				}
 			}
 		);
 	}
 	
 	CheckTokenState() {
 		if ( defined($_COOKIE["session"]) ) {
-			console.log("CheckTokenState: by cookie");
+			console.log("CheckTokenState: by cookie"); //+$_COOKIE["session"]);
 			api.username = atob($_COOKIE["username"]);
 			api.password=false;
 			api.ValidateToken( atob($_COOKIE["session"]) );
 		} else if ( defined($_GET["token"]) ) {
 			console.log("CheckTokenState: by url");
 			api.ValidateToken( $_GET["token"] );
+		} else if ( defined(api.session) && api.session ) {
+			console.log("CheckTokenState: by stored session");
+			api.ValidateToken( api.session );
 		} else {
 			console.log("CheckTokenState: none found, user must login");
 			api.session = null;
@@ -127,12 +160,13 @@ class MicertifyAPI {
 	}
 	
 	Login() {
-		this.Request( { "login" : { "username" : this.username, "password" : this.password } },
+		var data={ "login" : { "username" : api.username, "password" : api.password } }
+		api.Request( data,
 		 function (e) {
-		 if ( Successful(e) ) this.SetSession(e.data.key);
-		 else alert(e.message);
+		 if ( api.Successful(e) ) api.SetSession(e.data.key);
+			 console.log(api);
 		 }, 
-		 this.EmptyFunction
+		 api.EmptyFunction
 		);
 	}
 	

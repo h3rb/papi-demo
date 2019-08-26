@@ -1,6 +1,13 @@
 
 var app = null;
 
+function Get( id ) { return document.getElementById(id); }
+
+function GetInputValue(id) {
+	var a = Get(id);
+	return $(a).val();
+}
+
 class MicertifyApp {
 
  constructor( api ) {
@@ -44,6 +51,16 @@ class MicertifyApp {
  
  Init() {
   app.api.Init();
+  
+  // Establish jQuery Behaviors
+  $("#login-button").click(function(e){
+	  app.api.username = GetInputValue("login-username");
+	  app.api.password = GetInputValue("login-password");
+	  $.modal.close();
+	  app.api.Login();
+  });
+  
+  // Setup recurring session check
   setInterval(function(e){ app.Event30(); }, 30000);	 
   console.log(app);	 
   app.CheckSessionState();
@@ -62,8 +79,11 @@ class MicertifyApp {
   app.ShowLoginModal();
  }
  
+ 
  ShowLoginModal() {
   console.log("Show login modal.");
+  $("#modal-login").modal({ escapeClose: false, clickClose: false, showClose: false });
+  // $.modal.close();
  }
  
  Sidebar( c ) {

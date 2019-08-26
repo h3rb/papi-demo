@@ -13,7 +13,7 @@
   <!-- Ionicons -->
   <link rel="stylesheet" href="bower_components/Ionicons/css/ionicons.min.css">
   <!-- Theme style -->
-  <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+  <link rel="stylesheet" href="dist/css/AdminLTE.css">
   <!-- AdminLTE Skins. Choose a skin from the css/skins
        folder instead of downloading all of them to reduce the load. -->
   <!--link rel="stylesheet" href="dist/css/skins/_all-skins.min.css"-->
@@ -29,6 +29,8 @@
   <link rel="stylesheet" href="bower_components/bootstrap-daterangepicker/daterangepicker.css">
   <!-- bootstrap wysihtml5 - text editor -->
   <link rel="stylesheet" href="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
+  
+  <link rel="stylesheet" href="css/jquery.modal.css">
 
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -934,15 +936,7 @@
       </div>
       <!-- /.row (main row) -->
 
-        <div class="modal fade" id="modal-login">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Default Modal</h4>
-              </div>
-              <div class="modal-body">
+        <div class="modal" id="modal-login">
 
 <div class="login-box">
   <div class="login-logo">
@@ -952,18 +946,19 @@
   <div class="login-box-body">
     <p class="login-box-msg">Sign in to continue</p>
 
-    <form action="../../index2.html" method="post">
+    <form method="post">
       <div class="form-group has-feedback">
-        <input type="email" class="form-control" placeholder="Email">
+        <input id="login-username" type="username" class="form-control" placeholder="Username">
         <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
       </div>
       <div class="form-group has-feedback">
-        <input type="password" class="form-control" placeholder="Password">
+        <input id="login-password" type="password" class="form-control" placeholder="Password">
         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
       </div>
+    </form>
       <div class="row">
         <div class="col-xs-8">
-          <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button> 
+          <button class="btn btn-primary btn-block btn-flat" id="login-button">Sign In</button> 
         </div>
         <!-- /.col -->
         <div class="col-xs-4">
@@ -971,36 +966,22 @@
         </div>
         <!-- /.col -->
       </div>
-    </form>
 
-    <div class="social-auth-links text-center">
+    <!--div class="social-auth-links text-center">
       <p>- OR -</p>
       <a href="#" class="btn btn-block btn-social btn-facebook btn-flat"><i class="fa fa-facebook"></i> Sign in using
         Facebook</a>
       <a href="#" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using
         Google+</a>
-    </div>
-    <!-- /.social-auth-links -->
+    </div-->    <!-- /.social-auth-links -->
 
-    <a href="#">I forgot my password</a><br>
-    <a href="register.html" class="text-center">Register a new membership</a>
+    <a href="#">I forgot my password or username</a><br>
+    <!--a href="register.html" class="text-center">Register a new membership</a-->
 
-  </div>
-  <!-- /.login-box-body -->
-</div>
-<!-- /.login-box -->
+  </div>  <!-- /.login-box-body -->
+</div> <!-- /.login-box -->
 			  
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
-              </div>
-            </div>
-            <!-- /.modal-content -->
-          </div>
-          <!-- /.modal-dialog -->
-        </div>
-        <!-- /.modal -->
+        </div>        <!-- /.modal -->
 		
     </section>
     <!-- /.content -->
@@ -1242,10 +1223,8 @@
 <script src="bower_components/fastclick/lib/fastclick.js"></script>
 <!-- AdminLTE App -->
 <script src="dist/js/adminlte.min.js"></script>
-<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-<script src="dist/js/pages/dashboard.js"></script>
-<!-- AdminLTE for demo purposes -->
-<script src="dist/js/demo.js"></script>
+
+<script src="js/jquery.modal.min.js"></script>
   
   <!--script type="text/javascript" src="js/jquery-3.4.1.min.js"></script-->  <!-- maybe this not necessary? -->
   <script type="text/javascript">

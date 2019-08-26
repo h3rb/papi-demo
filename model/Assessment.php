@@ -63,11 +63,11 @@ abstract class AssessmentPassMode extends Enum {
    $values=API::MapValues( "Assessment", $vars['data'], Assessment::JSONMap(), Assessment::ValuesArray() );
    if ( isset($vars['for']) ) {
     if ( API::OwnerOf("Program",$vars['for'],$program) ) $values['r_Program']=$vars['for'];
-    else API::Failure("Not owner of that Program.", -10);
+    else API::Failure("Not owner of that Program.", ERR_NOT_OWNER);
    }
    API::UserNotOwner("Assessment",$values);
    $id=$m->Insert($values);
-   if ( false_or_null($id) ) API::Failure("Unable to create assessment.",-98);
+   if ( false_or_null($id) ) API::Failure("Unable to create assessment.",ERR_UNABLE_TO_CREATE);
    API::Success("Assessment created.", array("id"=>$id));
   }
   static function Modify( $vars ) {
@@ -75,8 +75,8 @@ abstract class AssessmentPassMode extends Enum {
    $m = new Assessment($database);
    if ( isset($vars['for']) ) {
     if ( API::OwnerOf("Assessment",$vars['for'],$existing) ) $id=$vars['for'];
-    else API::Failure("Not owner of Assessment.", -10);
-   } else API::Failure("No Assessment ID provided.", -9);
+    else API::Failure("Not owner of Assessment.", ERR_NOT_OWNER);
+   } else API::Failure("No Assessment ID provided.",ERR_MISSING_ID);
    $values=API::MapValues( "Assessment", $vars['data'], Assessment::JSONMap(), $existing );
    API::UserNotOwner("Assessment",$values);
    API::UserNotOwner("Assessment",$values);

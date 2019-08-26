@@ -57,13 +57,13 @@ abstract class AssessmentQuestionType extends Enum {
    $m = new AssessmentQuestion($database);
    if ( isset($vars['for']) ) {
     $for=intval($vars['for']);
-    if ( !API::OwnerOf("Assessment",$for,$existing) ) API::Failure("Not owner of that Assessment.", -10);
-   } else API::Failure("No Assessment ID provided.", -9);
+    if ( !API::OwnerOf("Assessment",$for,$existing) ) API::Failure("Not owner of that Assessment.", ERR_NOT_OWNER);
+   } else API::Failure("No Assessment ID provided.", ERR_MISSING_ID);
    $values=API::MapValues( "AssessmentQuestion", $vars['data'], AssessmentQuestion::JSONMap(), AssessmentQuestion::ValuesArray() );
    $values['r_Assessment']=$for;
    API::UserNotOwner("Assessment Question",$values);
    $id=$m->Insert($values);
-   if ( false_or_null($id) || intval($id) === 0 ) API::Failure("Unable to create Question.",-99);
+   if ( false_or_null($id) || intval($id) === 0 ) API::Failure("Unable to create Question.",ERR_UNABLE_TO_CREATE);
    API::Success("Question created.", array("id"=>$id));
   }
   static function Modify( $vars ) {
@@ -71,8 +71,8 @@ abstract class AssessmentQuestionType extends Enum {
    $m = new AssessmentQuestion($database);
    if ( isset($vars['for']) ) {
     if ( API::OwnerOf("AssessmentQuestion",$vars['for'],$existing) ) $id=$vars['for'];
-    else API::Failure("Not owner of that Assessment Question.", -10);
-   } else API::Failure("No Assessment Question ID provided.", -9);
+    else API::Failure("Not owner of that Assessment Question.", ERR_NOT_OWNER);
+   } else API::Failure("No Assessment Question ID provided.", ERR_MISSING_ID);
   $values=API::MapValues( "AssessmentQuestion", $vars['data'], AssessmentQuestion::JSONMap(), $existing );
   API::UserNotOwner("Assessment Question",$values);
   $m->Set($id,$values);

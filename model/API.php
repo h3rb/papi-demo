@@ -5,16 +5,25 @@
   static function Credentials( $vars ) {
    if ( isset($vars['forgot']) ) API::Forgot($vars);
    if ( isset($vars['key']) ) API::ValidateToken($vars);
+   if ( isset($vars['data']) && isset($vars['data']['login']) && is_array($vars['data']['login']) ) {
+    $un = $vars['data']['login']['username'];
+    $pw = $vars['data']['login']['password'];
+	API::Login($un,$pw);
+   }
    if ( isset($vars['login']) && is_array($vars['login']) ) {
     $un = $vars['login']['username'];
     $pw = $vars['login']['password'];
-    $result=Auth::Login($un,$pw);
-    if ( $result === -123 ) API::Failure("Password is expired.",-123);
-    global $session_token;
-    API::Response("success","Logged in.",array("key"=>$session_token));
+	API::Login($un,$pw);
    }
    if (!isset($vars['session'])) return API::HeaderCredentials($vars);
    return Session::ByKey($vars['session']);
+  }
+  
+  static function Login( $un, $pw ) {
+    $result=Auth::Login($un,$pw);
+    if ( $result === -123 ) API::Failure("Password is expired.",ERR_EXPIRED_PASSWORD);
+    global $session_token;
+    API::Response("success","Logged in.",array("key"=>$session_token));
   }
 
   static function HeaderCredentials( $vars ) {
@@ -32,22 +41,22 @@
      $session_token=$headers['X-Papi-Session-Token'];
      $session=Session::ByToken($session_token);
      if ( false_or_null($session) ) {
-      API::Failure("Session is Invalid",102);
+      API::Failure("Session is Invalid",ERR_SESSION_INVALID);
      }
      if ( time() > intval($session['expiresAt']) ) {
-      API::Failure("Session is Expired",104);
+      API::Failure("Session is Expired",ERR_SESSION_EXPIRED);
      }
      $session_id=$session['ID'];
      Session::Refresh();
      $auth_model=new Auth($auth_database);
      $auth=$auth_model->Get($session['r_Auth']);
      if ( false_or_null($auth) ) {
-      if ( !$is_admin ) API::Failure("User is not valid for Session",101);
+      if ( !$is_admin ) API::Failure("User is not valid for Session",ERR_USER_INVALID);
      }
      $is_admin=(intval($auth['su'])>0)?TRUE:$is_admin;
     }
     plog( "HeaderCredentials: ".implode(",",$session) );
-   } else API::Failure("Failed to include valid application identification header.",100);
+   } else API::Failure("Failed to include valid application identification header.",ERR_BAD_HEADERS);
   }
 
   static function Failure( $reason, $errcode=-1 ) {
@@ -69,7 +78,7 @@
   static function Success( $message, $data=NULL ) { return is_array($message) && $data === NULL ? API::Response("success","",$message) : API::Response( "success", $message, $data ); }
 
   static function GetValue( $vars, $ak, $errcode=-1 ) {
-   if ( !isset($vars[$ak]) || false_or_null($vars[$ak]) ) API::Failure( 'No '.$ak.' provided (required value).', $errcode );
+   if ( !isset($vars[$ak]) || false_or_null($vars[$ak]) ) API::Failure( 'No '.$ak.' provided (required value).', ERR_REQUIRED_VALUE_OMITTED );
    return $vars[$ak];
   }
 
@@ -87,7 +96,7 @@
    $final = $defaults;
    $keys = array_keys($map);
    foreach ( $keys as $k ) {
-    if ( !isset($map[$k]) ) API::Failure("Invalid data key '$k' submitted for '$dataName'", -8 );
+    if ( !isset($map[$k]) ) API::Failure("Invalid data key '$k' submitted for '$dataName'", ERR_INVALID_VALUE_KEY );
     $column=$map[$k][0];
     $type=$map[$k][1];
     if ( isset($in[$k]) ) {
@@ -99,21 +108,21 @@
        $id = intval($value);
        if ( $id === 0 ) $final[$column]=intval($value); // remove reference
        else if ( API::OwnerOf($table,intval($value)) ) $final[$column]=intval($value);
-       else API::Failure( "Reference to member of $table not owned by user (or does not exist)", -11);
-      } else API::Failure( "Wrong type for value '$k', expected $type", -9 );
+       else API::Failure( "Reference to member of $table not owned by user (or does not exist)", ERR_NOT_OWNER);
+      } else API::Failure( "Wrong type for value '$k', expected $type",ERR_WRONG_TYPE_FOR_VALUE );
      } else if ( $type == 'integer' ) {
       if ( is_numeric($value) ) $final[$column]=intval($value);
-      else API::Failure( "Wrong type for value '$k', expected $type", -9 );
+      else API::Failure( "Wrong type for value '$k', expected $type", ERR_WRONG_TYPE_FOR_VALUE );
      } else if ( $type == 'decimal' ) {
       if ( is_numeric($value) ) $final[$column]=floatval($value);
-      else API::Failure( "Wrong type for value '$k', expected $type", -9 );
+      else API::Failure( "Wrong type for value '$k', expected $type", ERR_WRONG_TYPE_FOR_VALUE );
      } else if ( $type == 'bool' || $type == 'boolean' ) {
       $v=0;
       if ( is_bool($value) ) $v = $value ? 1 : 0;
       else if ( is_numeric($value) ) $v = intval($value);
       else if ( is_string($value) && is($v,'yes','no','YES','NO','TRUE','FALSE','1','0','y','n','t','f','Y','N','T','F') ) {
        $v = is($v,array('yes','1','true','y','t')) ? 1 : 0;
-      } else API::Failure( "Wrong value for boolean '$k', expected a boolean value of TRUE/true, FALSE/false, 0, 1, or a string true, false, yes, no, 0, 1, y, n, t, f", -5 );
+      } else API::Failure( "Wrong value for boolean '$k', expected a boolean value of TRUE/true, FALSE/false, 0, 1, or a string true, false, yes, no, 0, 1, y, n, t, f", ERR_BAD_BOOLEAN );
       if ( $v === 0 ) $final[$column]=0;
       else $final[$column]=1;
      } else if ( $type == 'string' ) {
@@ -121,7 +130,7 @@
      }
     } else if ( isset($defaults[$column]) ) {
      $final[$column] = $defaults[$column];
-    } else API::Failure("Invalid data key '$k' submitted for '$dataName'", -8 );
+    } else API::Failure("Invalid data key '$k' submitted for '$dataName'",ERR_INVALID_VALUE_KEY );
    }
    return $final;
   }
@@ -149,15 +158,15 @@
   // Checks an array for "Owner" value equal to auth['ID']
   static function UserNotOwner( $tablename, $values ) {
    global $auth;
-   if ( !isset($values['Owner']) ) API::Failure("Check against Owner value not possible.",-12);
-   if ( intval($values['Owner']) != intval($auth['ID']) ) API::Failure("Attempt to set 'owner' value in $tablename to another user ID not allowed in this context.",-13);
+   if ( !isset($values['Owner']) ) API::Failure("Check against Owner value not possible.",ERR_NOT_OWNER);
+   if ( intval($values['Owner']) != intval($auth['ID']) ) API::Failure("Attempt to set 'owner' value in $tablename to another user ID not allowed in this context.",ERR_NOT_OWNER);
    return TRUE;
   }
 
 
   // Create a test, organization, question or answer.
   static function Create( $vars, $subject ) {
-   if ( !isset($vars['data']) ) API::Failure("Create operation: No data set provided.", -7);
+   if ( !isset($vars['data']) ) API::Failure("Create operation: No data set provided.",ERR_CREATE_SET_EMPTY);
    if ( is($subject,"test") ) Assessment::Make($vars);
    else if ( is($subject,"q") ) AssessmentQuestion::Make($vars);
    else if ( is($subject,"a") ) AssessmentAnswer::Make($vars);
@@ -172,7 +181,7 @@
 
   // Modify a test, question, answer, organization or certification
   static function Modify( $vars, $subject, $id ) {
-   if ( !isset($vars['data']) ) API::Failure("Modify operation: No data set provided.", -7);
+   if ( !isset($vars['data']) ) API::Failure("Modify operation: No data set provided.",ERR_MODIFY_SET_EMPTY);
    if ( is($subject,"test") ) Assessment::Modify($vars);
    else if ( is($subject,"q") ) AssessmentQuestion::Modify($vars);
    else if ( is($subject,"a") ) AssessmentAnswer::Modify($vars);
@@ -203,7 +212,8 @@
 
   static function ValidateToken( $vars ) {
    if ( Session::IsValid($vars['key']) ) API::Success("Session is valid.");
-   API::Failure("Session is not valid.");
+   API::Failure("Session is not valid.",ERR_SESSION_INVALID);
+   die;
   }
 
   // Validate (assert) the certification of a test taker
@@ -216,16 +226,16 @@
  static public function Forgot($vars) {
   $em=$vars["forgot"];
   $user=Auth::ByEmail($em);
-  if ( false_or_null($user) ) API::Failure("No such user with that email address.",102);
+  if ( false_or_null($user) ) API::Failure("No such user with that email address.",ERR_NO_SUCH_USER_FOR_EMAIL);
   $result=Auth::Forgot($user);
   API::Success( "Forgot email sent.", $result);
  }
 
  static public function DoLogout() {
   global $session;
-  if ( is_null($session) ) API::Failure("Not logged in",-1);
-  if ( Auth::Logout($session) ) API::Failure("Logged out.",1);
-  else API::Failure("Session had expired.",-1);
+  if ( is_null($session) ) API::Failure("Not logged in",ERR_INVALID_CREDENTIALS);
+  if ( Auth::Logout($session) ) API::Failure("Logged out.",ERR_SUCCESS);
+  else API::Failure("Session had expired.",ERR_SESSION_EXPIRED);
  }
 
  static public function GetIdentify() {

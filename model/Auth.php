@@ -11,12 +11,12 @@
    global $auth_database, $auth, $auth_model;
    $auth_model = new Auth($auth_database);
    $auth = $auth_model->byUsername($un);
-   if ( false_or_null($auth) ) API::Failure("No such user '$un'",-122);
+   if ( false_or_null($auth) ) API::Failure("No such user '$un'",ERR_USER_INVALID);
    if ( Auth::CheckPassword($pw,$auth) ) {
-    if ( Auth::PasswordIsExpired($auth) ) API::Failure("Password is expired.",-123);
+    if ( Auth::PasswordIsExpired($auth) ) API::Failure("Password is expired.",ERR_PASSWORD_EXPIRED);
     return Session::GenerateFor($auth['ID']);
    }
-   API::Failure("Password invalid.",-121);
+   API::Failure("Password invalid.",ERR_PASSWORD_INVALID);
   }
 
   function byUsername( $un ) {

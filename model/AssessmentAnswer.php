@@ -28,13 +28,13 @@
    $m = new AssessmentAnswer($database);
    if ( isset($vars['for']) ) {
     $for=intval($vars['for']);
-    if ( !API::OwnerOf("AssessmentQuestion",$for,$existing) ) API::Failure("Not owner of that Assessment Question.", -10);
-   } else API::Failure("No Assessment Question ID provided.", -9);
+    if ( !API::OwnerOf("AssessmentQuestion",$for,$existing) ) API::Failure("Not owner of that Assessment Question.", ERR_NOT_OWNER);
+   } else API::Failure("No Assessment Question ID provided.", ERR_MISSING_ID);
    $values=API::MapValues( "AssessmentAnswer", $vars['data'], AssessmentAnswer::JSONMap(), AssessmentAnswer::ValuesArray() );
    $values['r_AssessmentQuestion']=$for;
    API::UserNotOwner("AssessmentAnswer",$values);
    $id=$m->Insert($values);
-   if ( false_or_null($id) || intval($id) === 0 ) API::Failure("Unable to create Answer.",-99);
+   if ( false_or_null($id) || intval($id) === 0 ) API::Failure("Unable to create Answer.",ERR_UNABLE_TO_CREATE);
    API::Success("Answer created.", array("id"=>$id));
   }
   static function Modify( $vars ) {
@@ -42,8 +42,8 @@
    $m = new AssessmentAnswer($database);
    if ( isset($vars['for']) ) {
     if ( API::OwnerOf("AssessmentAnswer",$vars['for'],$existing) ) $id=$vars['for'];
-    else API::Failure("Not owner of that Assessment Answer.", -10);
-   } else API::Failure("No Assessment Answer ID provided.", -9);
+    else API::Failure("Not owner of that Assessment Answer.", ERR_NOT_OWNER);
+   } else API::Failure("No Assessment Answer ID provided.", ERR_MISSING_ID);
    $values=API::MapValues( "AssessmentAnswer", $vars['data'], AssessmentAnswer::JSONMap(), $existing );
    API::UserNotOwner("AssessmentAnswer",$values);
    $m->Set($id,$values);
