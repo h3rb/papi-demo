@@ -7,6 +7,10 @@ var $_GET = getparams(window.location.search);
 //console.log($_GET);
 //console.log(window.location.search);
 
+function isString(x) {
+  return Object.prototype.toString.call(x) === "[object String]"
+}
+
 var api = null;
 
 function ClearSuperGlobals() { $_COOKIE = [];  $_GET = []; }
@@ -75,7 +79,8 @@ class MicertifyAPI {
  	};
 	}
 	
-	SetSession( token ) { this.session=token; this.sessionHistory.push(Timestamped(token)); }
+	SetSession( token ) { api.session=token; api.sessionHistory.push(Timestamped(token)); }
+	SessionValid() { return api.session && ( typeof api.session === "string" || isString(api.session) ); }
 		
 	ConstructRequestHeaders( r ) {
 		r.setRequestHeader("X-Papi-Application-Id", "micertify.com");
@@ -112,6 +117,7 @@ class MicertifyAPI {
 			type: "POST",
 			url: api.api_url,
 			data: { data: post_data },
+			wasData : post_data,
 			dataType: "json",
 			beforeSend: function(request){api.ConstructRequestHeaders(request);},
 			done: doneFunc,
@@ -170,6 +176,115 @@ class MicertifyAPI {
 		);
 	}
 	
+	Logout() {
+		console.log("Logging out..");
+		var data={ "action" : "logout" }
+		api.Request( data,
+         function(e) {
+			 console.log("Logged out.");
+			 if ( api.Successful(e) ) {
+				 this.session = null;
+				 api.app.ShowLogout();
+				 api.app.InactivityTimerReset();
+				 this.username = null;
+				 this.password = null;
+				 Cookies.remove("session");
+				 Cookies.remove("username");
+			 }
+		 },
+		 function(e) { api.app.ShowLogout(); },
+		 function(e) {
+			 if ( api.retries > 0 ) { api.retries--; api.Logout(); } else api.app.ShowLogout(); 
+		 }
+		);
+	}
 	
+	List( t, onSuccess ) {
+		var data={ action : "list", subject : t };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			}
+		 }
+		);	
+	}
 	
+	Create( t, onSuccess ) {
+		var data={ action : "create", subject : t };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			}
+		 }
+		);	
+	}
+	
+	Get( t, onSuccess ) {
+		var data={ action : "get", subject : t };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			}
+		 }
+		);	
+	}
+	
+	Remove( t, id, onSuccess, onFailure ) {
+		var data={ action: "remove", subject: t, id: id };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }
+		);	
+	}
+	
+	Modify( t, id, onSuccess, onFailure ) {
+		var data={ action: "modify", subject: t, for: id };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }
+		);	
+	}
+	
+	Myself( onSuccess, onFailure ) {
+		var data={ action: "profile" };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }
+		);	
+	}	
+	
+	Profile( id, onSuccess, onFailure ) {
+		var data={ action: "profile", for: id };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, $.parseJSON(e.responseText));
+		 }
+		);	
+	}
 }

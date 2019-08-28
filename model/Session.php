@@ -106,10 +106,10 @@
   }
 
   public function LoggedOut( $session ) {
-   return intval($session['status'])===0 || $this->Timedout($session) || intval($session['logout']) > 0;
+   return intval($session['status'])===0 || $this->TimedOut($session) || intval($session['logout']) > 0;
   }
 
-  public function Timedout( $session ) {
+  static public function TimedOut( $session ) {
    return (strtotime('now') > intval($session['expiresAt']));
   }
 
@@ -205,7 +205,7 @@
   plog( '---------' );
  }
 
- function Logout( $sess=-1 ) {
+ static function Logout( $sess=-1 ) {
   if ( $sess=== -1 ) {
   global $session_id;
   if ( is_null($session_id) ) return FALSE;
@@ -260,7 +260,7 @@
    }
 
    // Test for inactivity timeout.
-   if ( $this->Timedout($session) ) {
+   if ( $this->TimedOut($session) ) {
     $this->Logout();
     $expired = true;
     return FALSE;

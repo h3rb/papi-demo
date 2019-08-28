@@ -77,6 +77,8 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
   API::GravatarSupport($g);
  } else if ( $action == 'identify' ) {
   API::GetIdentify();
+ } else if ( $action == 'logout' ) {
+  API::DoLogout();
  }
 
  API::Failure("Unknown request or badly formed request.",ERR_UNKNOWN_REQUEST);
