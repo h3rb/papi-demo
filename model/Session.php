@@ -342,7 +342,7 @@
    return TRUE;
   }
 
-  static public function IsValid( $token ) {
+  static public function IsValid( $token, $refresh=TRUE ) {
    global $session,$session_id;
    $session = Session::ByToken($token);
 //   if ( false_or_null($session) ) { Session::ByToken(base64_decode($token)); }
@@ -351,7 +351,7 @@
    }
    if ( Session::TimedOut($session) ) return FALSE;
    $session_id = $session['ID'];
-   Session::Refresh();
+   if ( $refresh === TRUE ) Session::Refresh();
    return TRUE;
   }
 

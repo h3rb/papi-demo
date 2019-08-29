@@ -29,7 +29,7 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 
  if ( !isset($gp['data']) ) API::Failure("No data provided.",ERR_NO_DATA);
 
- $g = json_decode($gp["data"],true);
+ $g = is_array($gp["data"]) ? $gp["data"] : json_decode($gp["data"],true);
 
  // var_dump($g); die;
 

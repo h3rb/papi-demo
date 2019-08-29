@@ -343,9 +343,9 @@
       <!-- search form -->
       <form action="#" method="get" class="sidebar-form" id="mcapp-sidebar-search-form">
         <div class="input-group">
-          <input type="text" name="q" class="form-control" placeholder="Search...">
+          <input type="text" name="q" class="form-control" placeholder="Search..." id="mcapp-sidebar-search-input">
           <span class="input-group-btn">
-                <button onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.search);" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
+                <button onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.search);" name="search" id="mcapp-sidebar-search-button" class="btn btn-flat"><i class="fa fa-search"></i>
                 </button>
               </span>
         </div>
@@ -507,9 +507,9 @@
   <!-- /.content-wrapper -->
   <footer class="main-footer">
     <div class="pull-right hidden-xs">
-      <b>Version</b> 2.4.13
+      <b>Version</b> <span id="current_version">1.0a</span>
     </div>
-    <strong>Copyright &copy; 2019-2020 <a href="https://micertify.com/fantastic">Fantastic! Inc.</a> </strong> All rights reserved.
+    <strong>Copyright &copy; 2019<span id="current_year"></span> <a href="https://micertify.com/fantastic">Fantastic! Inc.</a> </strong> All rights reserved.
   </footer>
   
 
@@ -758,6 +758,8 @@
 	var micertify_app = new MicertifyApp(micertify_api);
 	mcapp=micertify_app;
 	mcapp.Init();
+	var current_year=document.getElementById("current_year"); var d=new Date(Date.now()); var yr=d.getFullYear();  if ( yr > 2019 ) $(current_year).html("-"+yr);
+	var version_str=document.getElementById("current_version"); $(current_version).html(mcapp.version);
    });
   </script>
 </body>

@@ -1,3 +1,4 @@
+var APP_VERSION = "0.5 &alpha;";
 
 var app = null;
 
@@ -39,9 +40,14 @@ function isPageVisible() {
 class MicertifyApp {
 
  constructor( api ) {
+  this.version = APP_VERSION;
   this.api=api;
   this.api.app=this;
   this.codes = this.GetUICodes();
+  this.focused = null;
+  this.focusEvent = null;
+  this.blurred = null;
+  this.blurEvent = null;
   this.states = {
 	  sidebar: this.codes.sidebar.dashboard
   };
@@ -95,6 +101,8 @@ class MicertifyApp {
   app.InitInactivityTimeout();
   
   // Establish jQuery Behaviors
+  
+  // Establish login form
   $("#login-button").click(function(e){
 	  app.api.username = GetInputValue("login-username");
 	  app.api.password = GetInputValue("login-password");
@@ -102,6 +110,17 @@ class MicertifyApp {
 	  app.api.Login();
   });
   
+  // Establish onfocus tracking
+  $("input").focus( function(e) { app.focused = this; app.focusedEvent=e; } );
+  $("input").blur( function(e) { app.focused = null; app.focusedEvent=null; app.blurEvent=e; app.blurred=this;} );
+  $("select").focus( function(e) { app.focused = this; app.focusedEvent=e; } );
+  $("select").blur( function(e) { app.focused = null; app.focusedEvent=null; app.blurEvent=e; app.blurred=this;} );
+  $("textarea").focus( function(e) { app.focused = this; app.focusedEvent=e; } );
+  $("textarea").blur( function(e) { app.focused = null; app.focusedEvent=null; app.blurEvent=e; app.blurred=this;} );
+
+  // Establish event for enter/return key  
+  $(window).keyup(function(e) { if ( e.keyCode == 13 ) { event.preventDefault(); app.OnEnter(e); }}  );
+ 
   // Setup recurring session check
   setInterval(function(e){ app.Event30(); }, 30000);	 
   console.log(app);	 
@@ -127,7 +146,7 @@ class MicertifyApp {
 	$(window).click(app.InactivityTimerReset);
 	$(window).scroll(app.InactivityTimerReset);
  }
- InactivityTimerReset() { if ( isPageVisible() ) idleSince = Date.now(); console.log("idleTime reset"); } 
+ InactivityTimerReset() { if ( isPageVisible() ) idleSince = Date.now(); /*console.log("idleTime reset");*/ } 
  
  CheckSessionState() {
   console.log("CheckSessionState");
@@ -145,12 +164,17 @@ class MicertifyApp {
  ShowLoginModal() {
   this.Title("Log in");
   console.log("Show login modal.");
-  $("#modal-login").modal({ escapeClose: false, clickClose: false, showClose: false });
+  $("#mcapp-login-box").modal({ escapeClose: false, clickClose: false, showClose: false });
   // $.modal.close();
  }
  
  ShowLogout() {
         window.location.reload();
+ }
+ 
+ OnEnter() {
+	 if ( ( app.focused && app.focused === Get("mcapp-sidebar-search-input") )
+       || ( app.blurred && app.blurred === Get("mcapp-sidebar-search-input") ) ) { console.log("Enter pressed: Search"); $("#mcapp-sidebar-search-button").click(); }
  }
  
  Title( c ) {
@@ -175,9 +199,9 @@ class MicertifyApp {
 		  this.Title("Messages");
 		  $("#mcapp-sidebar-messages").addClass("active");
 		 break;
-		 case this.codes.sidebar.search:
+		 case this.codes.sidebar.search: // Called when enter pressed on search area, or button pressed.
 		  this.Title("Search");
-		  $("#mcapp-sidebar-search-form").addClass("active");
+		  $("#mcapp-sidebar-search-form").addClass("active");		  
 		 break;
 		 case this.codes.sidebar.browse:
 		  this.Title("Browse");

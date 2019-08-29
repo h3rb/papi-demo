@@ -210,8 +210,8 @@
   static function Invalidate( $vars, $id ) {
   }
 
-  static function ValidateToken( $vars ) {
-   if ( Session::IsValid($vars['key']) ) API::Success("Session is valid.");
+  static function ValidateToken( $vars, $refresh = TRUE ) {
+   if ( Session::IsValid($vars['key'],$refresh) ) API::Success("Session is valid.");
    API::Failure("Session is not valid.",ERR_SESSION_INVALID);
    die;
   }
