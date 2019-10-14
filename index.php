@@ -2,7 +2,7 @@
  include 'core/Page.php';
 
  if ( Session::logged_in() ) {
-  redirect('dash');
+  redirect('/app');
  } else {
   redirect('login');
  }

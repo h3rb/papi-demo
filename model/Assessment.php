@@ -67,7 +67,7 @@ abstract class AssessmentPassMode extends Enum {
    }
    API::UserNotOwner("Assessment",$values);
    $id=$m->Insert($values);
-   if ( false_or_null($id) ) API::Failure("Unable to create assessment.",ERR_UNABLE_TO_CREATE);
+   if ( false_or_null($id) || $id === 0 ) API::Failure("Unable to create assessment.",ERR_UNABLE_TO_CREATE);
    API::Success("Assessment created.", array("id"=>$id));
   }
   static function Modify( $vars ) {

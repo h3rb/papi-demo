@@ -73,4 +73,6 @@
    return TRUE;
   }
 
+  static function Logout() { return Session::Logout(); }
+
  };

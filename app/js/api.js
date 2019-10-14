@@ -122,11 +122,12 @@ class MicertifyAPI {
 			beforeSend: function(request){api.ConstructRequestHeaders(request);},
 			done: doneFunc,
 			success: successFunc,
-			error: errorFunc
+			error: errorFunc,
+			statusCode: { 400: errorFunc }
 		});
 	}
 	
-	Successful(e) { return ( e.result === "success" ); }
+	Successful(e) { return ( e && e.result === "success" ); }
 	
 	ValidateToken ( t, bake=false ) {
 		api.token=t;
@@ -136,12 +137,9 @@ class MicertifyAPI {
 			: function(e) { api.SetSession(api.token); },
 			function(e){ api.session=null; },
 			function(e) {
-				e.data = $.parseJSON(e.responseText);
-				if ( defined(e.data.error) && e.data.error == api.errorcode.ERR_INVALID_CREDENTIALS ) api.app.NoSessionStateCallback();
-    			else if ( api.retries > 0 ) {
-					api.retries--; /* We've been logged out? */  api.session=null;
-					setTimeout(function(){api.CheckTokenState()},5000); 
-				}
+				e.responseData = $.parseJSON(e.responseText);
+				api.app.NoSessionStateCallback();
+				console.log(e.responseData);
 			}
 		);
 	}
@@ -170,6 +168,7 @@ class MicertifyAPI {
 		api.Request( data,
 		 function (e) {
 		 if ( api.Successful(e) ) api.SetSession(e.data.key);
+			 api.password=true;
 			 console.log(api);
 		 }, 
 		 api.EmptyFunction
@@ -204,7 +203,18 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+				onSuccess(this.wasData, e, this);
+			}
+		 }
+		);	
+	}
+	
+	ListEverything( t, onSuccess ) {
+		var data={ action : "list", everything:true, subject : t };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
 			}
 		 }
 		);	
@@ -215,7 +225,7 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+				onSuccess(this.wasData, e, this);
 			}
 		 }
 		);	
@@ -226,7 +236,7 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
+				onSuccess(this.wasData, e, this);
 			}
 		 }
 		);	
@@ -237,11 +247,11 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
-			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
 		 }, 
 		 function(e) {
-			 onFailure(this.wasData, $.parseJSON(e.responseText));
+			 onFailure(this.wasData, e, this);
 		 }
 		);	
 	}
@@ -251,11 +261,11 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
-			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
 		 }, 
 		 function(e) {
-			 onFailure(this.wasData, $.parseJSON(e.responseText));
+			 onFailure(this.wasData, e, this);
 		 }
 		);	
 	}
@@ -265,11 +275,11 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
-			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
 		 }, 
 		 function(e) {
-			 onFailure(this.wasData, $.parseJSON(e.responseText));
+			 onFailure(this.wasData, e, this);
 		 }
 		);	
 	}	
@@ -279,11 +289,11 @@ class MicertifyAPI {
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, $.parseJSON(e.responseText)); 				
-			} else onFailure(this.wasData, $.parseJSON(e.responseText));
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
 		 }, 
 		 function(e) {
-			 onFailure(this.wasData, $.parseJSON(e.responseText));
+			 onFailure(this.wasData, e, this);
 		 }
 		);	
 	}

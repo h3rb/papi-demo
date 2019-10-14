@@ -34,25 +34,17 @@
    $is_admin=FALSE;
    $headers = apache_request_headers();
    if ( isset($headers['X-Papi-Application-Id']) && $headers['X-Papi-Application-Id']==stringval(MY_APP_ID) ) {
-    if ( isset( $headers['X-Papi-Admin-Token'] ) && $headers['X-Papi-Admin-Token']==stringval(MY_ADMIN_TOKEN) ) {
-     $is_admin &= TRUE;
-    }
+    if ( isset( $headers['X-Papi-Admin-Token'] ) && $headers['X-Papi-Admin-Token']==stringval(MY_ADMIN_TOKEN) ) $is_admin &= TRUE;
     if ( isset( $headers['X-Papi-Session-Token'] ) ) {
      $session_token=$headers['X-Papi-Session-Token'];
      $session=Session::ByToken($session_token);
-     if ( false_or_null($session) ) {
-      API::Failure("Session is Invalid",ERR_SESSION_INVALID);
-     }
-     if ( time() > intval($session['expiresAt']) ) {
-      API::Failure("Session is Expired",ERR_SESSION_EXPIRED);
-     }
+     if ( false_or_null($session) ) API::Failure("Session is Invalid",ERR_SESSION_INVALID);
+     if ( Session::TimedOut($session) ) API::Failure("Session is Expired",ERR_SESSION_EXPIRED);
      $session_id=$session['ID'];
      Session::Refresh();
      $auth_model=new Auth($auth_database);
      $auth=$auth_model->Get($session['r_Auth']);
-     if ( false_or_null($auth) ) {
-      if ( !$is_admin ) API::Failure("User is not valid for Session",ERR_USER_INVALID);
-     }
+     if ( false_or_null($auth) && !$is_admin ) API::Failure("User is not valid for Session",ERR_USER_INVALID);
      $is_admin=(intval($auth['su'])>0)?TRUE:$is_admin;
     }
     plog( "HeaderCredentials: ".implode(",",$session) );
@@ -82,9 +74,10 @@
    return $vars[$ak];
   }
 
-  static function UnmapValues( $dataName, $in, $map ) {
+  static function UnmapValues( $in, $map ) {
    $final = array();
    $keys = array_keys($map);
+   $final["id"]=$in['ID'];
    foreach ( $keys as $k ) {
     $column = $map[$k][0];
     if ( isset($in[$column]) ) $final[$k] = $in[$column];
@@ -110,7 +103,7 @@
        else if ( API::OwnerOf($table,intval($value)) ) $final[$column]=intval($value);
        else API::Failure( "Reference to member of $table not owned by user (or does not exist)", ERR_NOT_OWNER);
       } else API::Failure( "Wrong type for value '$k', expected $type",ERR_WRONG_TYPE_FOR_VALUE );
-     } else if ( $type == 'integer' ) {
+     } else if ( $type == 'integer' || $type == 'timestamp' ) {
       if ( is_numeric($value) ) $final[$column]=intval($value);
       else API::Failure( "Wrong type for value '$k', expected $type", ERR_WRONG_TYPE_FOR_VALUE );
      } else if ( $type == 'decimal' ) {
@@ -120,7 +113,7 @@
       $v=0;
       if ( is_bool($value) ) $v = $value ? 1 : 0;
       else if ( is_numeric($value) ) $v = intval($value);
-      else if ( is_string($value) && is($v,'yes','no','YES','NO','TRUE','FALSE','1','0','y','n','t','f','Y','N','T','F') ) {
+      else if ( is_string($value) && is($value,'yes','no','YES','NO','TRUE','FALSE','1','0','y','n','t','f','Y','N','T','F') ) {
        $v = is($v,array('yes','1','true','y','t')) ? 1 : 0;
       } else API::Failure( "Wrong value for boolean '$k', expected a boolean value of TRUE/true, FALSE/false, 0, 1, or a string true, false, yes, no, 0, 1, y, n, t, f", ERR_BAD_BOOLEAN );
       if ( $v === 0 ) $final[$column]=0;
@@ -162,6 +155,13 @@
    if ( intval($values['Owner']) != intval($auth['ID']) ) API::Failure("Attempt to set 'owner' value in $tablename to another user ID not allowed in this context.",ERR_NOT_OWNER);
    return TRUE;
   }
+  
+  static function List( $vars, $subject ) {
+   if ( is($subject,"test") || is($subject,"tests") ) Assessment::List($vars);
+   else if ( is($subject,"q") ) AssessmentQuestion::List($vars);
+   else if ( is($subject,"a") ) AssessmentAnswer::List($vars);
+   else if ( is($subject,"program") || is($subject,"programs") ) Program::List($vars);
+  }
 
 
   // Create a test, organization, question or answer.
@@ -170,6 +170,7 @@
    if ( is($subject,"test") ) Assessment::Make($vars);
    else if ( is($subject,"q") ) AssessmentQuestion::Make($vars);
    else if ( is($subject,"a") ) AssessmentAnswer::Make($vars);
+   else if ( is($subject,"program") ) Program::Make($vars);
   }
 
   // Remove (delete) a test, organization, question or answer.
@@ -177,6 +178,7 @@
    if ( is($subject,"test") ) Test::Drop($vars);
    else if ( is($subject,"q") ) Question::Drop($vars);
    else if ( is($subject,"a") ) Answer::Drop($vars);
+   else if ( is($subject,"program") ) Program::Drop($vars);
   }
 
   // Modify a test, question, answer, organization or certification
@@ -185,6 +187,7 @@
    if ( is($subject,"test") ) Assessment::Modify($vars);
    else if ( is($subject,"q") ) AssessmentQuestion::Modify($vars);
    else if ( is($subject,"a") ) AssessmentAnswer::Modify($vars);
+   else if ( is($subject,"program") ) Program::Modify($vars);
   }
 
   // Update a testing session in progress
@@ -200,6 +203,7 @@
    if ( is($subject,"test") ) Assessment::Retrieve($id);
    else if ( is($subject,"q") ) AssessmentQuestion::Retrieve($id);
    else if ( is($subject,"a") ) AssessmentAnswer::Retrieve($id);
+   else if ( is($subject,"program") ) Program::Retrieve($id);
   }
 
   // Grade the results for a test taker
@@ -211,9 +215,8 @@
   }
 
   static function ValidateToken( $vars, $refresh = TRUE ) {
-   if ( Session::IsValid($vars['key'],$refresh) ) API::Success("Session is valid.");
+   if ( Session::IsValid($vars['key'],$refresh) ) API::Success("Session is valid.",array("token"=>$vars['key']));
    API::Failure("Session is not valid.",ERR_SESSION_INVALID);
-   die;
   }
 
   // Validate (assert) the certification of a test taker
@@ -285,6 +288,15 @@
     )
    );
    die;
+  }
+  
+  static public function BoolResult( $value ) {
+      if ( is_bool($value) ) $v = $value ? 1 : 0;
+      else if ( is_numeric($value) ) $v = intval($value);
+      else if ( is_string($value) && is($value,'yes','no','YES','NO','TRUE','FALSE','true','false','t','f','1','0','y','n','t','f','Y','N','T','F') ) {
+       $v = is($v,array('yes','1','true','y','t')) ? 1 : 0;
+      } else $v = -1;
+	  return $v === 1;
   }
 
  };

@@ -52,7 +52,7 @@
 
   <header class="main-header">
     <!-- Logo -->
-    <a href="index2.html" class="logo">
+    <a href="index.html" class="logo">
       <!-- mini logo for sidebar mini 50x50 pixels -->
       <span class="logo-mini"><b><span class="logo-mi">Mi</span><span class="logo-certify">C</span></b></span>
       <!-- logo for regular state and mobile devices -->
@@ -267,15 +267,14 @@
           <!-- User Account: style can be found in dropdown.less -->
           <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <img src="dist/img/user2-160x160.jpg" class="user-image" alt="User Image">
-              <span class="hidden-xs">Alexander Pierce</span>
+              <span id="mcapp-topnav-userimage"><img src="dist/img/user2-160x160.jpg" class="user-image" alt="User Image"></span>
+              <span class="hidden-xs" id="mcapp-topnav-username"></span>
             </a>
             <ul class="dropdown-menu">
               <!-- User image -->
               <li class="user-header">
-                <img src="dist/img/user2-160x160.jpg" class="img-circle" alt="User Image">
-
-                <p>
+			    <span id="mcapp-dropdown-userimage"><img src="dist/img/user2-160x160.jpg" class="img-circle" alt="User Image"></span>
+                <p id="mcapp-dropdown-userblurb">
                   Alexander Pierce - Web Developer
                   <small>Member since Nov. 2012</small>
                 </p>
@@ -284,13 +283,13 @@
               <li class="user-body">
                 <div class="row">
                   <div class="col-xs-4 text-center">
-                    <a href="#">Followers</a>
+                    <a href="#">Certs</a>
                   </div>
                   <div class="col-xs-4 text-center">
-                    <a href="#">Sales</a>
+                    <a href="#">Students</a>
                   </div>
                   <div class="col-xs-4 text-center">
-                    <a href="#">Friends</a>
+                    <a href="#">Tests</a>
                   </div>
                 </div>
                 <!-- /.row -->
@@ -298,10 +297,10 @@
               <!-- Menu Footer-->
               <li class="user-footer">
                 <div class="pull-left">
-                  <a href="#" class="btn btn-default btn-flat">Profile</a>
+                  <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.action.profile);" class="btn btn-default btn-flat">Profile</a>
                 </div>
                 <div class="pull-right">
-                  <a href="#" class="btn btn-default btn-flat">Sign out</a>
+                  <a href="#" onclick="javascript:mcapp.Logout();" class="btn btn-default btn-flat">Sign out</a>
                 </div>
               </li>
             </ul>
@@ -494,6 +493,25 @@
 
   </div>  <!-- /.login-box-body -->
 </div> <!-- /.login-box -->  
+
+
+
+        <div class="modal" id="mcapp-modal">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="mcapp-modal-close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="mcapp-modal-title">Primary Modal</h4>
+              </div>
+              <div class="modal-body" id="mcapp-modal-body">
+                <p>One fine body&hellip;</p>
+              </div>
+              <div class="modal-footer" id="mcapp-modal-footer">
+                <button type="button" class="btn btn-secondary pull-left" data-dismiss="modal" id="mcapp-modal-button-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="mcapp-modal-button-save">Save changes</button>
+              </div>
+        </div>
+        <!-- /.modal -->
+
 
     <!-- end modals area -->		
 	

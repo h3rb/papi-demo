@@ -46,22 +46,22 @@
    global $session_model,$auth_model,$auth,$is_logged_in,$session,$session_id,$session_token,$auth;
    plog( "Cookies: ".print_r($_COOKIE,true) );
    if ( !isset($_COOKIE['session']) ) return ($is_logged_in=false);
-   $session=$this->ByToken(base64_decode($_COOKIE['session']) );
+   $session=Session::ByToken(base64_decode($_COOKIE['session']) );
    if ( !is_array($session) || !isset($session['r_Auth']) ) { plog("No session or invalid Auth: ".print_r($session,true) ); return ($is_logged_in=false); }
-   if ( $this->LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
+   if ( Session::LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
    $auth=$auth_model->Get( $session['r_Auth'] );
    if ( !is_array($auth) ) { plog("Session's Auth was invalid"); return ($is_logged_in=false); }
    if ( $auth_model->ACL('locked') ) {
     plog('Account is locked, logging user '.$auth['ID'].' off.');
-    $this->Logout();
+    Session::Logout();
     $is_logged_in=false;
     Page::Redirect("login?m=4");
    }
-   $this->Refresh();
+   Session::Refresh();
    $url=current_page_url();
    // Ignore any ajaxy stuff
    if ( stripos($url,"ajax.") === FALSE )
-    $this->Set( $session['ID'], array( 'last_url'=>current_page_url() ) );
+    $session_model->Set( $session['ID'], array( 'last_url'=>current_page_url() ) );
    return ($is_logged_in=true);
   }
 
@@ -86,39 +86,40 @@
    global $is_logged_in;
    global $session;
    global $auth;
-   $session=$this->Get( base64_decode($key) );
+   $session=$session_model->Get( base64_decode($key) );
    if ( !is_array($session) || !isset($session['r_Auth']) ) { plog("No session or invalid Auth: ".print_r($session,true) ); return ($is_logged_in=false); }
-   if ( $this->LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
+   if ( Session::LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
    $auth=$auth_model->Get( $session['r_Auth'] );
    if ( !is_array($auth) ) { plog("Session's Auth was invalid"); return ($is_logged_in=false); }
    if ( $auth_model->ACL('locked') ) {
     plog('Account is locked, logging user '.$auth['ID'].' off.');
-    $this->Logout();
+    Session::Logout();
     $is_logged_in=false;
     Page::Redirect("login?m=4");
    }
-   $this->Refresh();
+   Session::Refresh();
    $url=current_page_url();
    // Ignore any ajaxy stuff
    if ( stripos($url,"ajax.") === FALSE )
-    $this->Set( $session['ID'], array( 'last_url'=>current_page_url() ) );
+    $session_model->Set( $session['ID'], array( 'last_url'=>current_page_url() ) );
    return ($is_logged_in=true);
   }
 
   public function LoggedOut( $session ) {
-   return intval($session['status'])===0 || $this->TimedOut($session) || intval($session['logout']) > 0;
+   return intval($session['status'])===0 || Session::TimedOut($session) || intval($session['logout']) > 0;
   }
 
   static public function TimedOut( $session ) {
-   return (strtotime('now') > intval($session['expiresAt']));
+   return (time() > intval($session['expiresAt']));
   }
 
   public function ActiveUsers() {
-   $users=$this->Select('status=1');
+   global $session_model;
+   $users=$session_model->Select('status=1');
    $active=array();
    foreach ($users as $session) {
-    if ( !$this->LoggedOut($session) ) $active[]=$session;
-    else $this->Set($session['ID'],array('status'=>0));
+    if ( !Session::LoggedOut($session) ) $active[]=$session;
+    else $session_model->Set($session['ID'],array('status'=>0));
    }
    return $active;
   }
@@ -130,21 +131,21 @@
    global $session;
    global $auth;
    plog( "Cookies: ".print_r($_COOKIE,true) );
-   $session=$this->Get( $id );
+   $session=$session_model->Get( $id );
    if ( !is_array($session) || !isset($session['r_Auth']) ) { plog("No session or invalid Auth: ".print_r($session,true) ); return ($is_logged_in=false); }
-   if ( $this->LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
+   if ( Session::LoggedOut($session) ) { plog("Session was already logged out ".print_r($session,true)); return ($is_logged_in=false); }
    $auth=$auth_model->Get( $session['r_Auth'] );
    if ( !is_array($auth) ) { plog("Session's Auth was invalid"); return ($is_logged_in=false); }
    if ( $auth_model->ACL('locked') ) {
     plog('Account is locked, logging user '.$auth['ID'].' off.');
-    $this->Logout();
+    Session::Logout();
     return ($is_logged_in=false);
    }
-   $this->Refresh();
+   Session::Refresh();
    $url=current_page_url();
    // Ignore any ajaxy stuff
    if ( stripos($url,"ajax.") === FALSE )
-    $this->Set( $session['ID'], array( 'last_url'=>current_page_url() ) );
+    $session_model->Set( $session['ID'], array( 'last_url'=>current_page_url() ) );
    return ($is_logged_in=true);
   }
 
@@ -180,19 +181,19 @@
 
  // Debug function
  function get_session( $get_new_cookies=false, $reporting=false ) {
-  if ( $get_new_cookies === true ) $this->Active(true);
-  if ( $reporting === true ) $this->print_debug_info();
+  if ( $get_new_cookies === true ) Session::Active(true);
+  if ( $reporting === true ) Session::print_debug_info();
  }
 
  // Debug function
- function print_debug_info( $sid="none in this context" ) {
+ static function print_debug_info( $sid="none in this context" ) {
   global $auth, $session_model, $auth_model, $session;
   plog( '---------' );
   plog( '$_SESSION' );
   plog( $_SESSION );
   plog( '$_COOKIE' );
   plog( $_COOKIE );
-  $logged_in=$this->check_cookie(true);
+  $logged_in=$session_model->check_cookie(true);
   plog('print_debug_info:');
   plog( 'logged in: ' . ($logged_in ? "Yes" : "No") );
   plog( 'User:' );
@@ -206,21 +207,20 @@
  }
 
  static function Logout( $sess=-1 ) {
+  global $session_id,$session_model,$session;
   if ( $sess=== -1 ) {
-  global $session_id;
   if ( is_null($session_id) ) return FALSE;
   $sid=$session_id;
-  global $session_model,$session;
   $session = $session_model->Get( $sid );
   } else $session=$sess;
   if ( is_null( $session ) ) { return FALSE; } else {
    // Turn off the session's activity indicator
-   if ( !$this->LoggedOut($session) )
-    $this->Set($session['ID'], array( 'status'=>0, 'logout'=>strtotime('now') ) );
+   if ( !Session::LoggedOut($session) )
+    $session_model->Set($session['ID'], array( 'status'=>0, 'logout'=>strtotime('now') ) );
   }
  }
 
- private function check_cookie( $report=false ) {
+ private static function check_cookie( $report=false ) {
    if ( $report === true ) plog( 'check_cookie(): ');
    // Check for the session variable or the appropriate cookie information.
    if ( !isset($_SESSION['username'])
@@ -233,7 +233,7 @@
     $token    = base64_decode( $_SESSION['session']  );
    }
 
-   if ( $report === true ) $this->print_debug_info();
+   if ( $report === true ) Session::print_debug_info();
 
    // Determine if the session should has expired this page load.
    global $expired;
@@ -250,7 +250,7 @@
    $session_token=$token;
 
    global $session;
-   $session = $session_model->ByToken($token);
+   $session = Session::ByToken($token);
    plog('check_cookie: session='.var_export($session,true));
 
    // Invalid or expired session
@@ -260,19 +260,19 @@
    }
 
    // Test for inactivity timeout.
-   if ( $this->TimedOut($session) ) {
-    $this->Logout();
+   if ( Session::TimedOut($session) ) {
+    Session::Logout();
     $expired = true;
     return FALSE;
    }
 
    // Did we already log out?
-   if ( $this->LoggedOut($session) ) {
+   if ( Session::LoggedOut($session) ) {
     $expired = true;
     return FALSE;
    }
 
-   $this->Refresh();
+   Session::Refresh();
 
    global $auth_model;
    global $auth;
@@ -280,13 +280,13 @@
 
    // If we delete the user's Auth record, the session is terminated.
    if ( false_or_null($auth) ) {
-    $this->Logout();
+    Session::Logout();
     $expired = true;
     return FALSE;
    }
 
    // Talk if we're debugging.
-   if ( $report === true ) $this->print_debug_info();
+   if ( $report === true ) Session::print_debug_info();
    if ( $report === true ) plog( 'check_cookie(): (end)');
    return TRUE;
   }
@@ -343,13 +343,13 @@
   }
 
   static public function IsValid( $token, $refresh=TRUE ) {
+   if ( strlen($token) < 1 ) return FALSE;
    global $session,$session_id;
    $session = Session::ByToken($token);
 //   if ( false_or_null($session) ) { Session::ByToken(base64_decode($token)); }
-   if ( false_or_null($session) ) {
-    return FALSE;
-   }
+   if ( false_or_null($session) ) return FALSE;
    if ( Session::TimedOut($session) ) return FALSE;
+   if ( Session::LoggedOut($session) ) return FALSE;
    $session_id = $session['ID'];
    if ( $refresh === TRUE ) Session::Refresh();
    return TRUE;

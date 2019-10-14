@@ -52,63 +52,21 @@ body {
 </video>
 ');
 
- $message=NULL;
- switch ( $getpost['m'] ) {
-  case 1: case 2: $message='<div class="errorlogin">Password or Username Incorrect</div>'; break;
-  case 4: $message='<div class="errorlogin">Account is locked.</div>'; break;
- }
+ $p->JS('function go_login() { window.location="/app"; }');
+ $p->JS('function go_signup() { window.location="/register"; }');
 
- $p->HTML('center_search_bar.html');
-
- $p->JS('
- var login_shown=false; var searchDelayed=null;
- function login_form() {
-  if ( searchDelayed ) clearTimeout(searchDelayed);
-  if ( !login_shown ) {
-   $("#search").fadeOut("fast","linear");
-   $("#LOGIN-WRAPPER").show();
-   $("#LOGIN").fadeIn("slow","swing");
-   login_shown=true;
-  } else {
-   $("#search").fadeIn("slow","swing");
-   $("#LOGIN").fadeOut("slow","swing");
-   login_shown=false;
-  }
- }
-');
-
- $p->JQ('
- $("#search").hide();
- $("#LOGIN-WRAPPER").hide();
- $("#LOGIN-WRAPPER").click(
-  function(e){
-   if ( e.target.id == "login-submit" ) { return true; }
-   if ( e.target.id == "PRICING-LINK" ) { return true; }
-   if ( e.target.id == "SIGNUP-LINK" ) { return true; }
-   if ( e.target.id == "FORGOT-LINK" ) { return true; }
-   if ( e.target.id == "LOGIN-INTERIOR" ) return false;
-   if ( $(e.target).parents("#LOGIN-INTERIOR").length > 0 ) return false;
-   login_form();
-  }
- );
- $("password").keyup(function(e){ if(e.keyCode == 13) { $("#login-submit").click(); } });
- $("#LOGIN").hide();
- $("#LOGIN").fadeOut(1,"linear");
- $("#search").css("z-index",99);
- searchDelayed=setTimeout(function(e){$("#search").fadeIn("slow","swing");},1000);
- $("#login_now").click(function(e){login_form();});
- $("#signup_hint").click(function(e){window.location="/register";});
- $("#signup_now").click(function(e){window.location="/register";});
- $("#search").click(function(e){ $(e.target).attr("placeholder","Search for a testing program..."); });
- $("#search").focusout(function(e){ $(e.target).attr("placeholder","Search..."); });
-');
-
- if ( !is_null($message)) {
-  $messages=array( '###Messages###'=>$message );
-  $p->JQ('login_form();');
- } else $messages=array('###Messages###'=>'');
-
- $p->HTML('login_form.html',$messages);
+ $p->HTML('
+<br>
+<DIV class="login-logo"><img src="i/miCertify.svg" alt="miCertify" title="miCertify"><center><span class="strokedwhite" style="font-size:200%;">Teach or be taught</span></center></div>
+<br>
+<div id="login_now">Log In &#9654;</div>
+<div id="signup_hint" class="animated fadeIn">
+<hgroup class="speech-bubble"><p class="typer padded10"><span onclick="javascript:go_signup();">Find out more!</a></p></hgroup>
+</div>
+<div id="signup_now">Sign Up</div>
+ ');
+ $p->JQ('$("#signup_now").click(go_signup);');
+ $p->JQ('$("#login_now").click(go_signup);');
 
  if ( !$p->ajax ) $p->HTML('footer.html', array( "###YEAR###"=>date('Y') ) );
  $p->Render();

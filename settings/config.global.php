@@ -19,6 +19,7 @@ define('ERR_MODIFY_SET_EMPTY',-8);
 define('ERR_REQUIRED_VALUE_OMITTED',-9);
 define('ERR_WRONG_TYPE_FOR_VALUE',-10);
 define('ERR_MISSING_ID',-11);
+define('ERR_NOT_FOUND',-99);
 define('ERR_NOT_OWNER',-12);
 define('ERR_NO_DATA',-13);
 define('ERR_UNKNOWN_REQUEST',-14);

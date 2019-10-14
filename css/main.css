@@ -30,6 +30,46 @@ font-family: 'Roboto', sans-serif;
      1px 1px 0 #000;
 }
 
+
+.strokedwhite a {
+  color: #AAAAFF;
+  text-shadow:
+   -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;
+}
+
+.strokedwhite a:hover {
+  color: #AADDFF;
+  text-shadow:
+   -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;
+}
+
+
+.strokedwhite a:active {
+  color: #DDAAFF;
+  text-shadow:
+   -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;
+}
+
+
+.strokedwhite a:visited {
+  color: #AADDFF;
+  text-shadow:
+   -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;
+}
+
+
 video#bgvid { 
     position: fixed;
     top: 50%;
