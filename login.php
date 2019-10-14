@@ -66,7 +66,7 @@ body {
 <div id="signup_now">Sign Up</div>
  ');
  $p->JQ('$("#signup_now").click(go_signup);');
- $p->JQ('$("#login_now").click(go_signup);');
+ $p->JQ('$("#login_now").click(go_login);');
 
  if ( !$p->ajax ) $p->HTML('footer.html', array( "###YEAR###"=>date('Y') ) );
  $p->Render();
