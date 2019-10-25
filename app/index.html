@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
   
   <link rel="stylesheet" href="css/jquery.modal.css">
+  <link rel="stylesheet" href="css/jquery.growl.css">
 
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -38,11 +39,14 @@
   <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
   <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
   <![endif]-->
+  
+  <link rel="stylesheet" href="css/animate.css">
 
   <!-- Google Font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 
   <script type="text/javascript" src="js/js.cookie.min.js"></script>
+  <script type="text/javascript" src="js/app.common.js"></script>
   <script type="text/javascript" src="js/api.js"></script>
   <script type="text/javascript" src="js/app.js"></script>
 
@@ -446,6 +450,13 @@
             <div class="box-body" id="mcapp-content-box-body">
             </div>
           </div>
+          <div class="box box-default hidden" id="mcapp-content-box2">
+            <div class="box-header with-border" id="mcapp-content-box-title-wrapper2">
+              <h3 class="box-title" id="mcapp-content-box-title2"></h3>
+            </div>
+            <div class="box-body" id="mcapp-content-box-body2">
+            </div>
+          </div>
         </div>
       </div>
 	
@@ -498,16 +509,17 @@
 
         <div class="modal" id="mcapp-modal">
               <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="mcapp-modal-close">
-                  <span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close btn-flat" data-dismiss="modal" aria-label="Close" id="mcapp-modal-close">
+                  <span aria-hidden="true" class="fa fa-times-circle"></span></button>
                 <h4 class="modal-title" id="mcapp-modal-title">Primary Modal</h4>
               </div>
               <div class="modal-body" id="mcapp-modal-body">
-                <p>One fine body&hellip;</p>
+                <p>&hellip;</p>
               </div>
               <div class="modal-footer" id="mcapp-modal-footer">
                 <button type="button" class="btn btn-secondary pull-left" data-dismiss="modal" id="mcapp-modal-button-cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="mcapp-modal-button-save">Save changes</button>
+				<div id="mcapp-modal-message"></div>
               </div>
         </div>
         <!-- /.modal -->
@@ -742,6 +754,7 @@
 </script>
 <!-- Bootstrap 3.3.7 -->
 <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/bootstrap-notify.min.js"></script>
 <!-- Morris.js charts -->
 <script src="bower_components/raphael/raphael.min.js"></script>
 <script src="bower_components/morris.js/morris.min.js"></script>
@@ -767,6 +780,7 @@
 <script src="dist/js/adminlte.min.js"></script>
 
 <script src="js/jquery.modal.min.js"></script>
+<script src="js/jquery.growl.js"></script>
   
   <!--script type="text/javascript" src="js/jquery-3.4.1.min.js"></script-->  <!-- maybe this not necessary? -->
   <script type="text/javascript">

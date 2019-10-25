@@ -23,6 +23,7 @@ abstract class AssessmentPassMode extends Enum {
    return array(
     "name" => array( "Name", 'string' ),
     "desc" => array( "Description", 'string' ),
+    "member" => array( "r_Program", 'reference' ),
     "parent" => array( "r_Assessment", 'reference' ),
     "timed" => array( "Timed", 'bool' ),
     "limit" => array( "TimeLimit", 'integer' ),
@@ -87,7 +88,20 @@ abstract class AssessmentPassMode extends Enum {
    global $database;
    $m = new Assessment($database);
    $o = $m->Get($id);
-   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( "Assessment", $o, Assessment::JSONMap() ));
+   if ( false_or_null($o) ) API::Failure("Not found for ID.",ERR_NOT_FOUND);
+   if ( API::IsOwner($o) ) {
+     $mp = new Program($database);
+     $p = $mp->Get($o['r_Program']);
+     $mq = new AssessmentQuestion($database);
+     $q = $mp->Select(array("r_Assessment"=>$id));
+     $res=array(
+      "test"=>API::UnmapValues( $o, Assessment::JSONMap()),
+      "program"=>API::UnmapValues( $p, Program::JSONMap()),
+      "questions"=>API::UnmapValuesSet( $q, AssessmentQuestion::JsonMap())
+     );
+     API::Success($res);
+   }
+   else API::Failure("Not owner.",ERR_NOT_OWNER);
   }
 
  };

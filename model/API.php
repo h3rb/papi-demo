@@ -74,6 +74,12 @@
    return $vars[$ak];
   }
 
+  static function UnmapValuesSet( $in, $map ) {
+   if ( !is_array($in) ) return $in;
+   foreach ( $in as &$i ) $i=API::UnmapValues($i,$map);
+   return $in;
+  }
+
   static function UnmapValues( $in, $map ) {
    $final = array();
    $keys = array_keys($map);
@@ -97,10 +103,10 @@
      if ( $type == 'user' ) { global $auth; $final[$column]=$auth['ID']; }
      if ( $type == 'reference' ) {
       if ( is_numeric($value) ) {
-       $table=str_replace($column,"r_");
+       $table=str_replace("r_","",$column);
        $id = intval($value);
        if ( $id === 0 ) $final[$column]=intval($value); // remove reference
-       else if ( API::OwnerOf($table,intval($value)) ) $final[$column]=intval($value);
+       else if ( API::OwnerOf($table,intval($value),$parent) ) $final[$column]=intval($value);
        else API::Failure( "Reference to member of $table not owned by user (or does not exist)", ERR_NOT_OWNER);
       } else API::Failure( "Wrong type for value '$k', expected $type",ERR_WRONG_TYPE_FOR_VALUE );
      } else if ( $type == 'integer' || $type == 'timestamp' ) {
@@ -130,6 +136,7 @@
 
   // Checks if auth[id] == object['Owner']
   static function IsOwner( $object ) {
+   global $auth;
    if ( !false_or_null($auth) && intval($auth['ID']) === intval($object['Owner']) ) return TRUE;
    return FALSE;
   }
@@ -154,6 +161,11 @@
    if ( !isset($values['Owner']) ) API::Failure("Check against Owner value not possible.",ERR_NOT_OWNER);
    if ( intval($values['Owner']) != intval($auth['ID']) ) API::Failure("Attempt to set 'owner' value in $tablename to another user ID not allowed in this context.",ERR_NOT_OWNER);
    return TRUE;
+  }
+
+  static function NotOwner( $hint=NULL ) {
+   if ( false_or_null($hint) ) API::Failure("User is not owner.",ERR_NOT_OWNED);
+   else API::Failure("Not owner of $hint", ERR_NOT_OWNED);
   }
   
   static function List( $vars, $subject ) {
@@ -297,6 +309,45 @@
        $v = is($v,array('yes','1','true','y','t')) ? 1 : 0;
       } else $v = -1;
 	  return $v === 1;
+  }
+
+
+  static public function SpecialRequests( $vars ) {
+   if ( isset($vars["type"]) ) {
+    if ( is($vars["type"],"basic") ) API::SR_BasicUserInfo($vars);
+   }
+  }
+
+   // Gets the "basic user info", metrics that populate
+   // the sidebar, an overview of profile data and any tasks,
+   // notifications or messages.
+  static public function SR_BasicUserInfo( $vars ) {
+   global $database,$auth;
+   $mn = new Notification($database);
+   $mt = new Task($database);
+   $mm = new Message($database);
+   $notifications=API::UnmapValuesSet($mn->Select(array("Owner"=>$auth['ID'])),Notification::JSONMap());
+   $tasks=API::UnmapValuesSet($mt->Select(array("Owner"=>$auth['ID'])),Task::JSONMap());
+   $messages=API::UnmapValuesSet($mm->Select(array("Owner"=>$auth['ID'])),Message::JSONMap());
+   $result = array(
+    "user" => array(
+     "username" => $auth['username'],
+     "passwordExpiry" => intval($auth['password_expiry']),
+     "first" => $auth['first_name'],
+     "last" => $auth["last_name"],
+     "tier" => intval($auth["Tier"]),
+     "avatar" => intval($auth['Avatar'])
+    ),
+    "messages" => $messages,
+    "tasks" => $tasks,
+    "notifications" => $notifications,
+    // certifications count..
+    // incomplete tests...
+    // newly enrolled...
+    // papers needing graded
+    
+   );
+   API::Success("Retrieved.",$result);
   }
 
  };

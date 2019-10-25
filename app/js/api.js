@@ -7,28 +7,9 @@ var $_GET = getparams(window.location.search);
 //console.log($_GET);
 //console.log(window.location.search);
 
-function isString(x) {
-  return Object.prototype.toString.call(x) === "[object String]"
-}
-
 var api = null;
 
 function ClearSuperGlobals() { $_COOKIE = [];  $_GET = []; }
-
-// Read a page's GET URL variables and return them as an associative array.
-function getparams() {
-    var vars = [], hash;
-    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-    for(var i = 0; i < hashes.length; i++) { hash = hashes[i].split('='); vars[hash[0]] = hash[1]; }
-    return vars;
-}
-function get_protocol() { return location.protocol; }
-function is_ssl() { return (get_protocol() === 'https:'); }
-function getLocalTime() { var d=new Date(); return d.getMilliseconds(); }
-function Timestamped(data) { return { data: data, time: getLocalTime() }; }
-function defined(objele) { try { result= (typeof objele !== 'undefined'); } catch(e) { result=false; } return result; }
-function isset(obj,elem) { return defined(obj) && obj.hasOwnProperty(elem); }
-function isnull(obj) { return (obj !== null); }
 
 class MicertifyAPI {
 
@@ -47,11 +28,20 @@ class MicertifyAPI {
 		this.messageHistory = [];
 		this.retries = 1; // Consumed when used during initial sync.
 		this.app = null;
+		this.messages = [];
+		this.tasks = [];
+		this.notifications = [];
+		this.user = null;
 		this.errorcode = this.GetErrorCodes();
+		this.initializing=true;
 		api = this;
     }	
 	
-	Init() {}
+	Init() {
+     setTimeout(function(){ 
+	  api.BasicInfo( api.app.RepopulateFromBasicInfo );
+	 },500);
+	}
 	
 	GetErrorCodes() { 
  	return {
@@ -198,6 +188,10 @@ class MicertifyAPI {
 		);
 	}
 	
+	Recurring() {
+	 this.doGetBasicInfo();
+	}
+	
 	List( t, onSuccess ) {
 		var data={ action : "list", subject : t };
 		api.Request( data,
@@ -220,8 +214,22 @@ class MicertifyAPI {
 		);	
 	}
 	
-	Create( t, onSuccess ) {
-		var data={ action : "create", subject : t };
+	BasicInfo( onSuccess, onFailure ) {
+		var data={ action: "special", type: "basic" };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, e, this);
+		 }
+		);	
+	}	
+	
+	Create( t, input, onSuccess ) {
+		var data={ action : "create", subject : t, data: input };
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
@@ -231,18 +239,21 @@ class MicertifyAPI {
 		);	
 	}
 	
-	Get( t, onSuccess ) {
-		var data={ action : "get", subject : t };
+	Get( t, id, onSuccess, onFailure=api.DefaultError ) {
+		var data={ action: "get", subject: t, for: id };
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
 				onSuccess(this.wasData, e, this);
 			}
+		 },
+		 function(e) {
+			 onFailure(this.wasData, e, this);
 		 }
 		);	
 	}
 	
-	Remove( t, id, onSuccess, onFailure ) {
+	Remove( t, id, onSuccess, onFailure=api.DefaultError ) {
 		var data={ action: "remove", subject: t, id: id };
 		api.Request( data,
 		 function(e) {
@@ -256,8 +267,8 @@ class MicertifyAPI {
 		);	
 	}
 	
-	Modify( t, id, onSuccess, onFailure ) {
-		var data={ action: "modify", subject: t, for: id };
+	Modify( t, id, input, onSuccess, onFailure=api.DefaultError ) {
+		var data={ action: "modify", subject: t, for: id, data:input };
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
@@ -270,7 +281,7 @@ class MicertifyAPI {
 		);	
 	}
 	
-	Myself( onSuccess, onFailure ) {
+	Myself( onSuccess, onFailure=api.DefaultError ) {
 		var data={ action: "profile" };
 		api.Request( data,
 		 function(e) {

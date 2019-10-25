@@ -49,7 +49,9 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
  if ( !isset($g['action']) || false_or_null($g['action']) ) API::Failure("No action provided. ".str_replace("\n","",print_r($gp,true)),ERR_NO_ACTION);
 
  $action = API::GetValue($g,'action',-3);
- if ( $action == 'search' ) { // returns a search result
+ if ( $action == 'special' ) {
+  API::SpecialRequests($g);
+ } else if ( $action == 'search' ) { // returns a search result
  } else if ( $action == 'list' ) { // returns a list of objects of a particular type
   $value=API::GetValue($g,'subject',-3);
   API::List($g,$value);

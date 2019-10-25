@@ -22,7 +22,7 @@ abstract class ProgramMode extends Enum {
     "logo" => array( "Logo", 'integer' ),
     "published" => array( "Published", 'bool' ),
     "selfregistration" => array( "SelfRegistration", 'bool' ),
-	"mode" => array( "ProgramMode", 'ProgramMode' ),
+    "mode" => array( "ProgramMode", 'ProgramMode' ),
     "cost" => array( "Free", 'decimal' ),
     "created" => array( "Created", 'timestamp' ),
     "owner" => array( "Owner", 'integer' ),
@@ -72,7 +72,7 @@ abstract class ProgramMode extends Enum {
    global $database;
    $m = new Program($database);
    $o = $m->Get($id);
-   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( "Program", $o, Program::JSONMap() ));
+   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( $o, Program::JSONMap() ));
   }
   static function List( $vars ) {
 	  global $auth,$database;

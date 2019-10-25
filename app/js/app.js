@@ -4,97 +4,6 @@ var app = null;
 
 var idleSince = Date.now();
 
-function Get( id ) { return document.getElementById(id); }
-
-function GetInputValue(id) {
-	var a = Get(id);
-	return $(a).val();
-}
-
-function PageVisibilityProp(){
-    var prefixes = ['webkit','moz','ms','o'];
-    
-    // if 'hidden' is natively supported just return it
-    if ('hidden' in document) return 'hidden';
-    
-    // otherwise loop over all the known prefixes until we find one
-    for (var i = 0; i < prefixes.length; i++){
-        if ((prefixes[i] + 'Hidden') in document) 
-            return prefixes[i] + 'Hidden';
-    }
-
-    // otherwise it's not supported
-    return null;
-}
-
-function isPageVisible() {
-    var prop = PageVisibilityProp();
-    if (!prop) return true;    
-    return !document[prop];
-}
-
-function slugify(s) {
-  const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;'
-  const b = 'aaaaaaaaaacccddeeeeeeeegghiiiiiilmnnnnooooooooprrsssssttuuuuuuuuuwxyyzzz------'
-  const p = new RegExp(a.split('').join('|'), 'g')
-
-  return s.toString().toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
-    .replace(/&/g, '-and-') // Replace & with 'and'
-    .replace(/[^\w\-]+/g, '') // Remove all non-word characters
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, '') // Trim - from end of text
-}
-
-var html="";
-function PackForm( model, prefix="jsapp-model" ) {
- html="";
- model.forEach(function(item,index){
-	 var n = (item.name?item.name:index);
-	 var i = prefix+'-'+slugify(n);
-	 var v = (item.value?item.value:"");
-	 var p = (item.hint?item.hint:"");
-	 html+='<div id="'+i+'-wrapper" class="'+(item.css?item.css:"")+'" style="'+(item.style?item.style:"")+'">';
-	 if ( item.label ) html+='<label for="'+n+'">'+l;
-	 if ( item.type === "hidden" ) {
-		html+='<input name="'+n+'" id="'+i+'" type="hidden" value="'+v+'" placeholder="'+p+'">';
-	 } else if ( item.type === "string" ) {
-		html+='<input name="'+n+'" id="'+i+'" type="text" value="'+v+'" placeholder="'+p+'">';
-	 } else if ( item.type === "text" ) {
-		 html+='<textarea name="'+n+'" id="'+i+'" placeholder="'+p+'">'+v+'</textarea>';
-	 } else if ( item.type === "markdown" ) {
-		 html+='<textarea name="'+n+'" id="'+i+'" placeholder="'+p+'">'+v+'</textarea>';
-	 } else if ( item.type === "date" ) {
-		html+='<input name="'+n+'" id="'+i+'" type="date" value="'+v+'" placeholder="'+p+'">';
-	 } else if ( item.type === "slider" ) {
-		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'">';
-	 } else if ( item.type === "integer" ) {
-		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'">';
-	 } else if ( item.type === "decimal" ) {
-		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'">';
-	 } else if ( item.type === "radio" ) {
-	 } else if ( item.type === "select" ) {		 
-	 } else if ( item.type === "toggle" ) {
-	 }
-	 if ( item.label ) html+='</label>';
-	 html+='</div>';
- });
- return html;
-}
-
-function UnpackForm( prefix="jsapp-modal", model ) {
- var data={};
- model.forEach(function(item,index){
-	 var n = (item.name?item.name:index);
-	 var i = prefix+'-'+slugify(n);
-	 var v = $("#"+i).val();
-	 data[n] = v;
- });
- return data;
-}
-
 
 //********8//
 
@@ -114,6 +23,8 @@ class MicertifyApp {
 	  sidebar: this.codes.sidebar.dashboard
   };
   this.programs = null;
+  this.modalOnSaveFunc = null;
+  this.activeModalData = null;
   this.inactivityLimit = 20; // 20 minutes, seems like > 26 hard to reach
   app=this;
  }
@@ -163,7 +74,28 @@ class MicertifyApp {
  Event30() {
    if ( app.api.session ) app.CheckSessionState();
    else app.NoSessionStateCallback();
+ } 
+ 
+ Event60() {
  }
+	
+ Event120() {
+   if ( app.api.session ) {
+	 app.api.BasicInfo( app.RepopulateFromBasicInfo );
+   }
+ }
+	
+ RepopulateFromBasicInfo( outgoing,incoming,ajax ) {
+  console.log(incoming);
+  app.user = incoming.data.user;
+  app.messages = incoming.data.messages;
+  app.tasks = incoming.data.tasks;
+  app.notifications = incoming.data.notifications;
+  console.log("Updating UI");
+  app.redrawSidebar();
+  app.redrawTopnav();
+ }
+
  
  Init() {
   app.api.Init();
@@ -188,11 +120,17 @@ class MicertifyApp {
   $("textarea").focus( function(e) { app.focused = this; app.focusedEvent=e; } );
   $("textarea").blur( function(e) { app.focused = null; app.focusedEvent=null; app.blurEvent=e; app.blurred=this;} );
 
+  $("#mcapp-modal-close").click(function(e){$.modal.close();});
+  $("#mcapp-modal-button-cancel").click(function(e){$.modal.close();});
+  $("#mcapp-modal-button-save").click(function(e){if (app.modalOnSaveFunc) app.modalOnSaveFunc(app.activeModalData,e);});
+
   // Establish event for enter/return key  
   $(window).keyup(function(e) { if ( e.keyCode == 13 ) { event.preventDefault(); app.OnEnter(e); }}  );
  
   // Setup recurring session check
-  setInterval(function(e){ app.Event30(); }, 30000);	 
+  setInterval(function(e){ app.Event30(); }, 30000);
+  setInterval(function(e){ app.Event60(); }, 60000);
+  setInterval(function(e){ app.Event120(); }, 120000);
   console.log(app);	 
   app.CheckSessionState();
  }
@@ -256,9 +194,30 @@ class MicertifyApp {
  Control( t ) {
  } 
 
- Modal( title, body, saveButton="Save Changes", cancelButton="Cancel" ) {
+ ModalClearMessage() { $("#mcapp-modal-message").html(""); }
+ 
+ ModalSuccess( msg ) {
+  $("#mcapp-modal-message").html(
+    '<div class="alert alert-success" role="alert">'
+   +msg
+   +'</div>'
+  );
+ }
+ 
+ ModalWarning( msg ) {
+  $("#mcapp-modal-message").html(
+    '<div class="alert alert-danger" role="alert">'
+   +msg
+   +'</div>'
+  );
+ }
+
+ Modal( title, body, model, onSave, saveButton="Save Changes", cancelButton="Cancel" ) {
+	 app.modalOnSaveFunc=onSave;
+	 app.activeModalData=model;
 	 $("#mcapp-modal-title").html(title);
 	 $("#mcapp-modal-body").html(body);
+	 $("#mcapp-modal-message").html("");
 	 if ( saveButton === false ) $("#mcapp-modal-button-save").hide();
      else {
 		$("#mcapp-modal-button-save").show();
@@ -269,7 +228,7 @@ class MicertifyApp {
 		$("#mcapp-modal-button-cancel").show();
 		$("#mcapp-modal-button-cancel").html(cancelButton);
 	 }
-	 $("#mcapp-modal").modal({ escapeClose: true, clickClose: true, showClose: true });
+	 $("#mcapp-modal").modal({ escapeClose: true, clickClose: true, showClose: false });
  }
  
  Sidebar( c ) {
@@ -330,7 +289,7 @@ class MicertifyApp {
  UpdateMetrics() {
  }
  
- drawLoader( title, subtitle, crumblist ) {
+ drawLoader( title, subtitle, crumblist=null ) {
 	 $("#mcapp-header-title").html( title+"<small>"+subtitle+"</small>");
 	 var crumblisthtml = '<li><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.dashboard);"><i class="fa fa-dashboard"></i> Home</a></li>';
 	 if ( crumblist ) {
@@ -347,12 +306,24 @@ class MicertifyApp {
  drawPrograms(outgoing,incoming,ajax) {
 	 var content="";
 	 console.log(incoming);
+	 $("#mcapp-content-box-title").html('<div class="pull-right"><button onclick="javascript:mcapp.drawAddProgram();"><i class="fa fa-plus-circle"></i> Create New Program</button></div>');
 	 var programs = incoming.data.result;
 	 app.programs = programs;
-	 programs.forEach( program => {
-      content += "<b>"+program.name+'</b><BR>';
+	 programs.forEach( function (program,index) {
+	  content += '<div class="pull-right"><button onclick="javascript:mcapp.drawAddAssessment('+program.id+');"><i class="fa fa-plus-circle"></i> New Test</button></div>';
+      content += '<div class="roundbox">';
+      content += "<h4>"+program.name+'</h4>';
 	  content += '<a href="#" title="Edit" alt="Edit" onclick="javascript:mcapp.Edit(mcapp.codes.edit.program,'+program.id+')"><i class="fa fa-edit"></i> Edit</a> ';
-      content += '<i class="fa fa-users"></i> Enrollment';
+	  content += '<hr>';
+	  program.tests.forEach( function (test,index) {
+      	  content += '<a href="#" title="Edit" class="pull-right" onclick="javascript:mcapp.drawEditAssessment('+test.id+');"><i class="fa fa-edit"></i> Edit</a>';
+		  content += '<h5>'+test.name+'</h5>';
+		  content += '<p>'+test.desc+'</p>';
+		  if ( index != program.tests.length-1 ) content+='<center>&hellip;</center>';
+	  });
+	  content += '</div>';
+	  if ( index != programs.length-1 ) content+='<div style="height:5px;"></div>';
+//      content += '<i class="fa fa-users"></i> Enrollment';
 	 });
 	 $("#mcapp-content-box-body").html(content);
  }
@@ -367,20 +338,105 @@ class MicertifyApp {
 	   if ( app.programs[i].id == id ) return app.programs[i];
    }
    return null;
+ } 
+ 
+ drawAddProgram() {
+	 var model=[
+	 { name: "name", label: "Program Name:", type:"string", hint: "Program Name", required:true }
+	 ];
+	 app.Modal( "New Program", PackForm( model ), model, function(model,e) {
+ 	  console.log(model);
+	  var data=UnpackForm(model);
+	  app.api.Create( "program", 
+	   { name:data.name },
+	   function(outgoing,incoming,ajax) {
+		  $.modal.close();
+		  app.doPrograms();
+	   }
+	  );
+	  console.log(data);
+	 });
  }
  
  drawEditProgram( id ) {
-	 console.log("drawEditProgram:"+id);
 	 var program = app.GetProgramByID(id);
 	 if ( !program ) return;
 	 var model=[
-	 { name: "name", value: program.name, hint: "Program Name" }
+	 { name: "id", type:"hidden", value:id },
+	 { name: "name", label: "Name:", type:"string", value: program.name, hint: "Program Name" }
 	 ];
-	 app.Modal( "Editing Program", PackForm( model ) );
+	 app.Modal( "Editing Program Details", PackForm( model ), model, function(model,e) {
+ 	  console.log(model);
+	  var data=UnpackForm(model);
+	  console.log(data);
+	  if ( data.error ) {
+		  Warn(data.error.message);
+	  } else {
+		app.api.Modify("Program", data.id, 
+		  { name:data.name }, 
+		  function(incoming,outgoing,ajax){
+//			  app.ModalLock();
+			  Succeed("Changes saved.");
+			  setTimeout(function(){app.doPrograms();},1000);
+		  }, function(e){
+			  Warn("Unable to save changes!");
+		  }
+		 );
+	  }
+	 });
  }
  
- drawEditTest( id ) {
-	 console.log("drawEditTest:"+id);
+ drawAddAssessment( program_id ) {
+	 var model=[
+	 { name: "member", type:"hidden", value:program_id },
+	 { name: "name", label: "Name:", type:"string", hint: "Test Name", required:true },
+	 { name: "desc", label: "Description", type:"text", hint: "Describe your test here." },
+	 { name: "timed", label: "Is this a timed test?", type:"toggle" },
+	 { name: "randomize", label: "Randomize question order?", type:"toggle" },
+	 { name: "private", label: "Invite only?", type: "toggle" },
+	 { name: "privatebadges", label: "Do not allow badge on public user profiles", type: "toggle" },
+				 
+	 ];
+	 app.Modal( "New Assessment", PackForm( model ), model, function(model,e) {
+ 	  console.log(model);
+	  var data=UnpackForm(model);
+	  app.api.Create( "test", 
+	   { name:data.name, member:data.member, desc:data.desc },
+	   function(outgoing,incoming,ajax) {
+		  $.modal.close();
+		  Succeed("New Assessment Created!");
+		  app.drawEditAssessment(incoming.data.id);
+	   }
+	  );
+	  console.log(data);
+	 });
+ }
+ 
+ drawEditAssessment( test_id ) {	 
+	 this.drawLoader( "Assessment", "Create &amp; Edit", null ); 
+	 console.log("drawEditAssessment:"+test_id);
+	 app.api.Get( "test", test_id, function(outgoing,incoming,ajax) {
+		console.log(incoming);
+		var test=incoming.data.test;
+		var program=incoming.data.program;
+		var questions=incoming.data.questions;
+		var title=test.name;
+		var subtitle="Create &amp; Edit";
+        $("#mcapp-header-title").html( title+"<small>"+subtitle+"</small>");
+		$("#mcapp-content-box-title").html('<div class="pull-right"><button onclick="javascript:mcapp.drawAddQuestion('+test.id+');"><i class="fa fa-plus-circle"></i> Add Question</button></div>');
+		var crumbs = '<li><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.dashboard);"><i class="fa fa-dashboard"></i> Home</a></li>';
+		crumbs += '<li><a href="#" onclick="javascript:mcapp.doPrograms();">'+program.name+'</a></li>';
+		crumbs += '<li class="active">'+test.name+'</li>';
+		$("#mcapp-header-breadcrumb").html( crumbs );
+		var content="";
+		$("#mcapp-content-box-body").html(content);
+	 }, function(outgoing,incoming,ajax) {
+		 Warn("Error loading test!");
+		 app.doPrograms();
+	 });
+ }
+ 
+ drawAddQuestion( id ) {
  }
  
  drawEditQuestion( id ) {
@@ -398,6 +454,23 @@ class MicertifyApp {
   }
  }
 
+ redrawSidebar() {
+	 return;
+	var content="";
+	content+='<ul class="sidebar-menu" data-widget="tree" id="mcapp-sidebar-list">';
 
+	content+=
+        '<li class="header" id="jsapp-sidebar-section-help">SUPPORT</li>'+
+        '<li id="mcapp-sidebar-gettingstarted"><a href="#" onclick="javascript:jsapp.Sidebar(jsapp.codes.sidebar.gettingstarted);"><i class="fa fa-toggle-right"></i> <span>Getting Started</span></a></li>'+
+        '<li id="mcapp-sidebar-reference"><a href="https://bloomfield.ai/reference" target="_blank"><i class="fa fa-book"></i> <span>App Reference</span></a></li>'+
+        '<li id="mcapp-sidebar-support">><a href="https://bloomfield.ai/support" target="_blank"><i class="fa fa-question-circle"></i> <span>Get Support</span></a></li>'
+		;
+	content+='</ul>';
+
+	$("#mcapp-sidebar-menu").html(content);
+ }
+ 
+ redrawTopnav() {
+ }
 
 };

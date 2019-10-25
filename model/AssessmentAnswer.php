@@ -54,6 +54,6 @@
    global $database;
    $m = new AssessmentAnswer($database);
    $o = $m->Get($id);
-   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( "AssessmentAnswer", $o, AssessmentAnswer::JSONMap() ));
+   if ( API::IsOwner($o) ) API::Success(API::UnmapValues( $o, AssessmentAnswer::JSONMap() ));
   }
  };
