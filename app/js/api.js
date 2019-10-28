@@ -269,6 +269,7 @@ class MicertifyAPI {
 	
 	Modify( t, id, input, onSuccess, onFailure=api.DefaultError ) {
 		var data={ action: "modify", subject: t, for: id, data:input };
+        console.log(data);
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {

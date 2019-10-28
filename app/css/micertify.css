@@ -22,7 +22,7 @@
 
 /* https://proto.io/freebies/onoff/ */
 .onoffswitch {
-    position: relative; width: 62px;
+    position: relative; width: 52px;
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
 }
 .onoffswitch-checkbox {
@@ -37,18 +37,20 @@
     transition: margin 0.3s ease-in 0s;
 }
 .onoffswitch-inner:before, .onoffswitch-inner:after {
-    display: block; float: left; width: 50%; height: 8px; padding: 0; line-height: 8px;
+    display: block; float: left; width: 50%; height: 16px; padding: 0; line-height: 8px;
     font-size: 10px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
     box-sizing: border-box;
 }
 .onoffswitch-inner:before {
-    content: "";
+    content: "ON";
     padding-left: 10px;
+	padding-top: 4px;
     background-color: #EEEEEE; color: #000000;
 }
 .onoffswitch-inner:after {
-    content: "";
+    content: "OFF";
     padding-right: 10px;
+	padding-top: 4px;
     background-color: #EEEEEE; color: #999999;
     text-align: right;
 }

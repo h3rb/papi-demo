@@ -19,6 +19,7 @@ abstract class ProgramMode extends Enum {
   static function JSONMap() {
    return array(
     "name" => array( "Name", 'string' ),
+    "desc" => array( "Description", 'string' ),
     "logo" => array( "Logo", 'integer' ),
     "published" => array( "Published", 'bool' ),
     "selfregistration" => array( "SelfRegistration", 'bool' ),
@@ -28,23 +29,30 @@ abstract class ProgramMode extends Enum {
     "owner" => array( "Owner", 'integer' ),
     "invite" => array( "InviteOnly", 'bool' ),
     "premium" => array( "PaymentRequired", 'bool' ),
-    "autoenroll" => array( "AutoEnroll", 'bool' )
+    "autoenroll" => array( "AutoEnroll", 'bool' ),
+    "days" => array("Days", 'integer' ),
+    "crowdgrading" => array("CrowdGrading", 'integer'),
+    "intro" => array("Introduction", "string")
    );
   }
   static function ValuesArray() {
    global $auth;
    return array(
    "Name" => "New Testing Program",
-   "Logo" => 1,
+   "Logo" => 0,
    "Published" => 0,
-   "SelfRegistration" => 0,
+   "SelfRegistration" => 1,
    "ProgramMode" => ProgramMode::All,
    "Free" => 0.00,
    "Created" => time(),
    "Owner" => $auth['ID'],
    "InviteOnly" => 0,
    "PaymentRequired" => 0,
-   "AutoEnroll" => 1
+   "AutoEnroll" => 1,
+   "Description" => "",
+   "Days" => 0,
+   "Introduction"=>"Welcome to the course!",
+   "CrowdGrading" => 0
    );
   }
   static function Make( $vars ) {
