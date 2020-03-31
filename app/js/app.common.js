@@ -1,7 +1,84 @@
-// string utilities
+var PI=Math.PI.toFixed(20);
 
-function isString(x) {
-  return Object.prototype.toString.call(x) === "[object String]"
+function interpolate( min, max, percent_norm_1 ) {
+ min=parseFloat(min);
+ max=parseFloat(max); 
+ return ( (min) + ((max) - (min) / (percent_norm_1) == 0.0 ? 1.0 : (percent_norm_1) ) );
+}
+
+var Date_options = {};
+var idleSince = Date.now();
+
+function formatDateForHTML(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+
+    return [year, month, day].join('-');
+}
+
+var todays_html_date=formatDateForHTML(idleSince);
+var week_ago_html_date=formatDateForHTML(Date.now() - 7*(24*60*60*1000));
+
+function HUMANDATE( dstring ) { // Locale version for human eyes
+ var d= new Date(dstring);
+ var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+ return d.toLocaleDateString(undefined,options);
+}
+
+function HUMANTIME( dstring ) { // Locale version for human eyes
+ var d= new Date(dstring);
+ var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+ return d.toLocaleTimeString(undefined,options);
+}
+function DDMMYYYY( dstring ){ // this format required for API calls
+ if ( !defined(dstring) ) return null;
+ var d= new Date(dstring);
+ var d=d.toISOString().substring(0,10);
+ var parts=d.split('-');
+ return parts[2]+'/'+parts[1]+'/'+parts[0];
+}
+
+function YYYYMMDD( dstring ){ // this format required for html date input tag value
+ if ( !defined(dstring) ) return null;
+ var d= new Date(dstring);
+ var d=d.toISOString().substring(0,10);
+ var parts=d.split('-');
+ return parts[0]+'-'+parts[1]+'-'+parts[2];
+}
+// flips YYYYMMDD to DDMMYYYY
+function DDMMYYYYtoHUMAN( dstring, sep='/' ){
+ var parts=dstring.split(sep);
+ var d=new Date;
+ d.setDate(parseInt(parts[0]));
+ d.setMonth(parseInt(parts[1])-1);
+ d.setYear(parseInt(parts[2]))
+ var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+ return d.toLocaleDateString(undefined,options);
+}
+
+function YYYYMMDDtoDDMMYYYY(ds, sep="-") {
+ var parts=ds.split(sep);
+ return parts[1]+sep+parts[2]+sep+parts[0];
+}
+function DDMMYYYYtoYYYYMMDD(ds, sep="-") {
+ var parts=ds.split(sep);
+ return parts[1]+sep+parts[2]+sep+parts[0];
+}
+
+function DDMMtoMMDD(ds, sep="-") {
+ var parts=ds.split(sep);
+ return parts[1]+sep+parts[0]+sep+parts[2];
+}
+function MMDDtoDDMM(ds, sep="-") {
+ var parts=ds.split(sep);
+ return parts[1]+sep+parts[0]+sep+parts[2];
 }
 
 String.prototype.replaceAll = function(search, replacement) {
@@ -9,38 +86,56 @@ String.prototype.replaceAll = function(search, replacement) {
     return target.split(search).join(replacement);
 };
 
-// create slug-like strings (wordpress concept) for URI generation and other purposes
-function slugify(s) {
-  const a = '/_,:;';
-  const b = '-----';
-  const p = new RegExp(a.split('').join('|'), 'g');
-
-  return s.toString().toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
-    .replace(/&/g, '-and-') // Replace & with 'and'
-    .replace(/[^\w\-]+/g, '') // Remove all non-word characters
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, '') // Trim - from end of text
+function importObject(to, from,name=null) {
+ var oname=name;
+ if ( !defined(name) || !name ) oname=from.constructor.name;
+ for (var prop in from) {
+  if ( defined(to[prop]) ) console.log("importObject("+oname+"): Warning `"+prop+"` is already defined, redefining" );
+  to[prop] = from[prop];
+ }
 }
 
-// php brainfarts
+function isChecked(item) {	
+    if ( item.checked ) return true;
+    switch(item.getAttribute('aria-checked')) {
+        case "true": return true;
+    }
+	return false;
+}
 
-function isset(obj,elem) { return defined(obj) && obj.hasOwnProperty(elem); }
-function var_dump(a,b=null) { if ( b ) { console.log(a); console.log(b); } else console.log(a); }
-function defined(objele) { try { result= (typeof objele !== 'undefined'); } catch(e) { result=false; } return result; }
-function isnull(obj) { return (obj !== null); }
-function int(a) { return parseInt(a); }
-function implode( sep, arr ) { var res=""; for ( var i=0; i<arr.length; i++ ) { res+=arr[i]; if ( i != arr.length -1 ) res+=sep; } return res; }
-function is_array(arr) { return Array.isArray(arr); }
+function stripHtml(html) {
+   var tmp = document.createElement("DIV");
+   tmp.innerHTML = html;
+   return tmp.textContent || tmp.innerText || "";
+}
 
-// javascript augmentation functions
 
-function beyond_range(v,a,b) { if ( v < a || v > b ) return true; return false; }
-function within_range(v,a,b) { if ( v >= a && v <= b ) return true; return false; }
+	 // Function to download data to a file
+function downloadAsFile(data, filename, type="text") {
+    var file = new Blob([data], {type: type});
+    if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    else { // Others
+        var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+    }
+}
 
-function merge( a, b ) { return { ...a, ...b }; }
+function numToLetter( n ) {
+ return String.fromCharCode(n % 26 + 'a'.charCodeAt(0));
+}
+
+function isString(x) {
+  return Object.prototype.toString.call(x) === "[object String]"
+}
 
 function istrue(v) {
 	var b=isString(b)?v.toLowerCase():v;
@@ -64,6 +159,131 @@ function isfalse(v) {
 	return false;
 }
 
+function isBoolean(obj) {
+   return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
+}
+
+// php brainfarts
+
+function isset(obj,elem) { return defined(obj) && obj.hasOwnProperty(elem); }
+function var_dump(a,b=null) { if ( b ) { console.log(a); console.log(b); } else console.log(a); }
+function defined(objele) { try { result= (typeof objele !== 'undefined'); } catch(e) { result=false; } return result; }
+function isnull(obj) { return (obj !== null); }
+function int(a) { return parseInt(a); }
+function implode( sep, arr ) { var res=""; for ( var i=0; i<arr.length; i++ ) { res+=arr[i]; if ( i != arr.length -1 ) res+=sep; } return res; }
+function is_array(arr) { return Array.isArray(arr); }
+
+function getUrlParam(name) {
+    var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    return (results && results[1]) || undefined;
+}
+
+// number format
+function nf( a, digi=2 ) { return parseFloat(a).toFixed(digi); }
+// round format integer
+function rfi( a, round=0.5 ) { return parseInt(Math.floor(parseFloat(a)+0.5)); }
+// timestamp conversion
+function ts(a) { var d= new Date(parseInt(a)*1000);
+ return d.toString().replace("Eastern Standard Time","EST").replace("Eastern Daylight Time","EDT").replace("Pacific Standard Time","PST").replace("Pacific Daylight Time","PDT").replace("Mountain Standard Time","MST").replace("Mountain Daylight Time","MDT").replace("Central Standard Time","CST").replace("Central Daylight Time","CDT");
+}
+// timestamp conversion
+function tsDDMMYYYY(a,sep='-') { var d= new Date(parseInt(a)*1000);
+ var d=d.toISOString().substring(0,10);
+ var parts=d.split('-');
+ return parts[2]+sep+parts[1]+sep+parts[0];
+}
+// timestamp conversion
+function tsYYYYMMDD(a,sep='-') { var d= new Date(parseInt(a)*1000);
+ console.log(d.toISOString());
+ var d=d.toISOString().substring(0,10);
+ var parts=d.split('-');
+ return parts[0]+sep+parts[1]+sep+parts[2];
+}
+
+// human file size
+function humanFileSize(bytes, si=true) {
+    var thresh = (si ? 1000 : 1024), u=-1;
+    if (Math.abs(bytes) < thresh) return bytes + ' b';
+    var units = si ? ['kb','mb','G','TB','PB','EB','ZB','YB'] : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+    do { bytes /= thresh; ++u; } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+    return bytes.toFixed(1)+' '+units[u];
+}
+
+// time and date
+function getLocalTime() { var d=new Date(); return d.getMilliseconds(); }
+function Timestamped(data) { return { data: data, time: getLocalTime() }; }
+
+
+// When the user scrolls down 20px from the top of the document, show the button
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+  var mybutton=Get("scroll_to_top");
+  if ( !mybutton ) return;
+  if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+    mybutton.style.display = "block";
+  } else {
+    mybutton.style.display = "none";
+  }
+}
+
+// Scroll to an element
+
+function scrollElement( ele, delayed=2000 ) { 
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#"+ele.id).offset().top
+    }, delayed);
+}
+
+// useful web page stuff
+
+// Read a page's GET URL variables and return them as an associative array.
+function getparams() {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) { hash = hashes[i].split('='); vars[hash[0]] = hash[1]; }
+    return vars;
+}
+function get_protocol() { return location.protocol; }
+function is_ssl() { return (get_protocol() === 'https:'); }
+
+// scrolling
+
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+  document.body.scrollTop = 0; // For Safari
+  document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}
+
+/**
+ * return the distance between two points.
+ *
+ * @param {number} x1		x position of first point
+ * @param {number} y1		y position of first point
+ * @param {number} x2		x position of second point
+ * @param {number} y2		y position of second point
+ * @return {number} 		distance between given points
+ */
+Math.getDistance = function( x1, y1, x2, y2 ) {
+	var	xs = x2 - x1, ys = y2 - y1;	
+	xs *= xs;
+	ys *= ys;
+	return Math.sqrt( xs + ys );
+}
+
+function sq( a ) { return a*a; }
+function mum( pixels ) { return pixels*3.45; }
+function pir2( radius ) { return PI * sq(radius); }
+
+function implode( sep, arr ) {
+	var res="";
+	for ( var i=0; i<arr.length; i++ ) {
+		res+=arr[i];
+		if ( i != arr.length -1 ) res+=sep; 
+	}
+	return res;
+}
+
 function forEachNested(O, f, cur){
     O = [ O ]; // ensure that f is called with the top-level object
     while (O.length) // keep on processing the top item on the stack
@@ -83,24 +303,11 @@ function traverse(o,func) {
     }
 }
 
-// time and date
+function WITHIN(tx,ty,x,y,w,h)          { return ( tx > x && tx < x+w && ty > y && ty < y+h ); }
+function WITHINInclusive(tx,ty,x,y,w,h) { return ( tx >= x && tx <= x+w && ty >= y && ty <= y+h ); }
+function rad2deg(radians) {  return radians * (180/Math.PI.toFixed(20));  }
+function LineAngleDeg(x,y,x2,y2) { return rad2deg(Math.atan2( (y2-y), (x2-x) )); }
 
-function getLocalTime() { var d=new Date(); return d.getMilliseconds(); }
-function Timestamped(data) { return { data: data, time: getLocalTime() }; }
-
-// useful web page stuff
-
-// Read a page's GET URL variables and return them as an associative array.
-function getparams() {
-    var vars = [], hash;
-    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-    for(var i = 0; i < hashes.length; i++) { hash = hashes[i].split('='); vars[hash[0]] = hash[1]; }
-    return vars;
-}
-function get_protocol() { return location.protocol; }
-function is_ssl() { return (get_protocol() === 'https:'); }
-
-// DOM helpers
 
 function Get( id ) { return document.getElementById(id); }
 
@@ -109,18 +316,16 @@ function GetInputValue(id) {
 	return $(a).val();
 }
 
+// returns the browser's page visibility property
 function PageVisibilityProp(){
-    var prefixes = ['webkit','moz','ms','o'];
-    
+    var prefixes = ['webkit','moz','ms','o'];    
     // if 'hidden' is natively supported just return it
-    if ('hidden' in document) return 'hidden';
-    
+    if ('hidden' in document) return 'hidden';    
     // otherwise loop over all the known prefixes until we find one
     for (var i = 0; i < prefixes.length; i++){
         if ((prefixes[i] + 'Hidden') in document) 
             return prefixes[i] + 'Hidden';
     }
-
     // otherwise it's not supported
     return null;
 }
@@ -130,8 +335,6 @@ function isPageVisible() {
     if (!prop) return true;    
     return !document[prop];
 }
-
-// css helpers
 
 function GetAColor( seed ) {
  var colors = ["Aqua","Aquamarine","Black","Blue","BlueViolet","Brown","BurlyWood","CadetBlue","Chartreuse",
@@ -150,20 +353,25 @@ function GetAColor( seed ) {
  "Salmon","SandyBrown","SeaGreen","Sienna","Silver","SkyBlue","SlateBlue","SlateGray","SlateGrey",
  "SpringGreen","SteelBlue","Tan","Teal","Thistle","Tomato","Turquoise","Violet","Wheat","Yellow",
  "YellowGreen"];
- return colors[seed%colors.length];
+ return (""+colors[seed%colors.length]).trim();
 }
 
+function slugify(s) {
+  return s.toString().toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/&/g, '-and-') // Replace & with 'and'
+    .replace(/[^\w\-]+/g, '') // Remove all non-word characters
+    .replace(/\-\-+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
+}
 
-// geometry: rectangles
-
-function WITHIN(tx,ty,x,y,w,h) { return ( tx > x && tx < x+w && ty > y && ty < y+h ); }
-function WITHINInclusive(tx,ty,x,y,w,h) { return ( tx >= x && tx <= x+w && ty >= y && ty <= y+h ); }
 
 
 // html form handler that supports jquery automation with ajax api
 
 var html="";
-function PackForm( model, prefix="mcapp-model" ) {
+function PackForm( model, prefix="jsapp-model" ) {
  html="";
  html='<table width="100%">';
  model.forEach(function(item,index){
@@ -171,7 +379,8 @@ function PackForm( model, prefix="mcapp-model" ) {
 	 var i = prefix+'-'+slugify(n);
 	 var v = (item.value?item.value:"");
 	 var p = (item.hint?item.hint:"");
-	 html+="<tr><td>";
+	 if ( item.type == "markdown" || item.type == "text" ) html+='<tr><td>';
+	 else html+='<tr id="'+i+'-wrapper"><td>';
 	 if ( item.label ) html+='<label for="'+n+'">'+item.label+'</label>';
 	 html+="</td><td>";
 	 if ( item.type === "p" ) {
@@ -199,14 +408,14 @@ function PackForm( model, prefix="mcapp-model" ) {
 	 } else if ( item.type === "text" ) {
 		html+="</td></tr>";
 		html+="</table>";
-		html+='<textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea>';
+		html+='<div id="'+i+'-wrapper"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
 		html+='<table width="100%">';
 		html+="<tr><td>";
 		html+="</td><td>";
 	 } else if ( item.type === "markdown" ) {
 		html+="</td></tr>";
 		html+="</table>";
-		html+='<div class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
+		html+='<div id="'+i+'-wrapper" class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
 		html+='<table width="100%">';
 		html+="<tr><td>";
 		html+="</td><td>";
@@ -247,8 +456,10 @@ function PackForm( model, prefix="mcapp-model" ) {
 			 html+='>'+opt.name+'</option>';
 		 });
 		 html+='</select>';
+  } else if ( item.type === "color" ) {
+   html+= '<input type="color" id="'+i+'" name="'+i+'" value="'+(v.length>0?v:"#FF0000")+'">';
 	 } else if ( item.type === "toggle" ) {
-		 html+=html_Switch(i,istrue(v));
+		 html+='<input type="checkbox" id="'+i+'" name="'+i+'" value="'+i+'"'+(istrue(v)?" checked":'')+'>';
 	 }
 	 html+="</td></tr>";
  });
@@ -272,7 +483,7 @@ function enableByValue( ele ) {
 	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
 		 else { domlist=[]; domlist[0]=item.options[i].enable; }
 	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
-		 if ( $(Get(domid)).is(':checked') ) {
+		 if ( $(Get(domid)).is(':checked') || isChecked(Get(domid)) ) {
 			value=i;
 			value_domid=domid;
 			for(var j=0;j<domlist.length;j++){
@@ -313,7 +524,7 @@ function enableByValue( ele ) {
 function revealByValue( ele ) {
 	var item=ele.formitem;
 	var n = (item.name?item.name:index);
-	var i = ele.id;
+	var id = ele.id;
 	var p = (item.hint?item.hint:"");
 	if ( !( item.type == 'radio' || item.type == 'select' ) ) return;
 	if ( item.type == 'radio' ) {
@@ -321,21 +532,21 @@ function revealByValue( ele ) {
 	 var value_domid=null;
 	 var opt_list=[];
  	 for ( var i=0; i<item.options.length; i++ ) {
-		 var domid=i+'-'+num;
+		 var domid=id+'-'+i;
 		 opt_list[opt_list.length]=domid;
 	   	 var domlist;
 	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
 		 else { domlist=[]; domlist[0]=item.options[i].enable; }
 	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
-		 if ( $(Get(domid)).is(':checked') ) {
+		 if ( $(Get(domid)).is(':checked') || isChecked(Get(domid)) ) {
 			value=i;
 			value_domid=domid;
 			for(var j=0;j<domlist.length;j++){
-			 $('#'+domlist[j]).show();
+			 $('#'+domlist[j]+'-wrapper').show();
 			}
 		 } else {
 			for ( var j=0; j<domlist.length; j++ ) {
-			 $('#'+domlist[j]).hide();
+			 $('#'+domlist[j]+'-wrapper').hide();
 			}
 		 }
 	 }
@@ -344,7 +555,7 @@ function revealByValue( ele ) {
 	 var value_domid=value?(i+'-'+value):null;
 	 var opt_list=[];
  	 for ( var i=0; i<item.options.length; i++ ) {
-		 var domid=i+'-'+num;
+		 var domid=id+'-'+i;
 		 opt_list[opt_list.length]=domid;
 	   	 var domlist;
 	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
@@ -352,11 +563,11 @@ function revealByValue( ele ) {
 	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
 		 if ( value == i ) {
 			for(var j=0;j<domlist.length;j++){
-			 $('#'+domlist[j]).show();
+			 $('#'+domlist[j]+'-wrapper').show();
 			}
 		 } else {
 			for ( var j=0; j<domlist.length; j++ ) {
-			 $('#'+domlist[j]).hide();
+			 $('#'+domlist[j]+'-wrapper').hide();
 			}
 		 }
 	  }
@@ -364,7 +575,7 @@ function revealByValue( ele ) {
 }
 
 // call to bind functions in jquery after packing the form and spewing it
-function jQueryForm( model, prefix="mcapp-model" ) {
+function jQueryForm( model, prefix="jsapp-model" ) {
  model.forEach(function(item,index){
 	 item.prefix=prefix;
 	 var n = (item.name?item.name:index);
@@ -372,6 +583,7 @@ function jQueryForm( model, prefix="mcapp-model" ) {
 	 var v = (item.value?item.value:"");
 	 var p = (item.hint?item.hint:"");
 	 var ele=Get(i);
+  if ( !ele ) { console.log("Warning: no valid element found by id "+i); }
 	 ele.formitem=item;
 	 if ( item.hide ) $("#"+i).hide();
 	 if ( item.hover ) $("#"+i).hover(item.hover.enter,item.hover.leave);
@@ -443,38 +655,60 @@ function jQueryForm( model, prefix="mcapp-model" ) {
 	 }
 	 // enable,reveal expects "domid" or ["domid","domid2"...]
 	 if ( item.type == 'toggle' ) {
+       switcher(ele);
 	   if ( item.enable ) {
 	   	 var domlist;
 	   	 if ( is_array(item.enable) ) domlist=item.enable;
 	     else { domlist=[]; domlist[0]=item.enable; }
 	   	 var ele=Get(i);
-	   	 for(var i=0;i<this.domlist.length;i++) this.domlist[i]=prefix+'-'+slugify(this.domlist[i]);
+	   	 for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
 	   	 ele.domlist=domlist;
 	   	 $(ele).toggle(
 	   	  function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);}},
 	   	  function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}}
 	   	 );
+		 $(ele).click(function(e){
+			 console.log(this);
+			 if ( ($(this).is(":checked") || isChecked(this)) ) {
+				for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);} 
+				if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
+			 } else {
+				for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}
+				if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
+			 }			 
+		 });
+		 
 	   	 if ( istrue(item.value) ) {
-			 for(var i=0;i<domlist.length;i++){Get('#'+domlist[i]).setAttribute("disabled",true);}
+			 for(var k=0;k<domlist.length;k++){Get(domlist[k]).setAttribute("disabled",true);}
 	   	 } else {
-			 for(var i=0;i<domlist.length;i++){Get('#'+domlist[i]).prop("disabled",true);Get('#'+domlist[i]).removeAttr("disabled");}
+			 for(var k=0;k<domlist.length;k++){Get(domlist[k]).prop("disabled",true);Get('#'+domlist[k]).removeAttr("disabled");}
 		 }
 	   }
 	   if ( item.reveal ) {
 	   	 var domlist;
 	   	 if ( is_array(item.reveal) ) domlist=item.reveal;
 	     else { domlist=[]; domlist[0]=item.reveal; }
+		 console.log(domlist);
 	   	 var ele=Get(i);
-	   	 for(var i=0;i<this.domlist.length;i++) this.domlist[i]=prefix+'-'+slugify(this.domlist[i]);
+	   	 for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
 	   	 ele.domlist=domlist;
 	   	 $(ele).toggle(
-	   	  function(e){for(var i=0;i<this.domlist.length;i++){$(this.domlist[i]).show();} if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); },
-	   	  function(e){for(var i=0;i<this.domlist.length;i++){$(this.domlist[i]).hide();} if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); }
+	   	  function(e){console.log("even");for(var i=0;i<this.domlist.length;i++){$(this.domlist[i]).show();} if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); },
+	   	  function(e){console.log("odd"); for(var i=0;i<this.domlist.length;i++){$(this.domlist[i]).hide();} if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); }
 	   	 );
+		 $(ele).click(function(e){
+			 if ( ($(this).is(":checked") || isChecked(this)) ) {
+				for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).show();} 
+				if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
+			 } else {
+				for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).hide();}
+				if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
+			 }			 
+		 });
 	   	 if ( istrue(item.value) ) {
-			 for(var i=0;i<domlist.length;i++){$(domlist[i]).show();}
+			 for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).show();}
 	   	 } else {
-			 for(var i=0;i<domlist.length;i++){$(domlist[i]).hide();}
+			 for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).hide();}
 		 }
 	   }
 	 }
@@ -525,7 +759,7 @@ function FormErr(item,model,prefix) {
 }
 
 // Get the data out of a packed form
-function UnpackForm( model, prefix="mcapp-model" ) {
+function UnpackForm( model, prefix="jsapp-model" ) {
  var data={};
  console.log("Unpacking: ");
  console.log(model);
@@ -535,15 +769,17 @@ function UnpackForm( model, prefix="mcapp-model" ) {
 	 var v = ( item.type == "toggle" ) ? ($('#'+i).is(':checked')?1:0) :
              ( item.type == "markdown" ) ? (item.live.value()) :
 			 $("#"+i).val();
+  console.log(n+"("+i+")="+v);
 	 if ( item.required ) {
 		 if ( item.type == "string" && v.length < 1 ) return FormErr(item,model,prefix);
+		 else if ( item.type == "color" && v.length < 1 ) return FormErr(item,model,prefix);
 		 else if ( item.type == "date" && v.length < 1 ) return FormErr(item,model,prefix);
 		 else if ( item.type == "toggle" && isfalse(v) ) return FormErr(item,model,prefix);
 		 else if ( (item.type === "integer" || item.type == "decimal" || item.type == "number" || item.type == "money" )
                 && (item.range && beyond_range(v,item.range.min,item.range.max)) ) return FormErr(item,model,prefix);
 	 }
 	 if ( !(item.type == 'h1'      || item.type == 'h2'
- 	    || item.type == 'h3'	   || item.type == 'h4'
+	    || item.type == 'h3'	      || item.type == 'h4'
 	    || item.type == 'h5'       || item.type == 'h6'
 	    || item.type == 'span'     || item.type == 'div'
 	    || item.type == 'p') ) {
@@ -555,7 +791,7 @@ function UnpackForm( model, prefix="mcapp-model" ) {
  return data;
 }
 
-function SaveButton( where, model, saveFunction, text="Save Changes", prefix="mcapp" ) {
+function SaveButton( where, model, saveFunction, text="Save Changes", prefix="jsapp" ) {
 	var domid=prefix+'-saveButton';
 	var html='<button id="'+domid+'">'+text+'</button>';
 	$(Get(where)).append(html);
@@ -572,14 +808,14 @@ function SaveButton( where, model, saveFunction, text="Save Changes", prefix="mc
 
 // Executes your fun "form model" that usually is built off an API data block
 // expects: unpackFunc( data, model, domid_prefix, context )
-function Modelize( injectpoint, prefix="mcapp-model", model, jqueryIt=true ) {
+function Modelize( injectpoint, prefix="jsapp-model", model, jqueryIt=true ) {
 	$(injectpoint).html(PackForm(model,prefix));
 	if ( jqueryIt ) jQueryForm(model, prefix);
 }
 
 function defaultUnmapForm(data) { return data; }
 
-function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc, prefix="mcapp-model" ) {
+function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc, prefix="jsapp-model" ) {
  	  console.log(model);
 	  var data=UnpackForm(model,prefix);
 	  console.log(data);
@@ -596,31 +832,367 @@ function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc, prefix="
 	  }
 }
 
+// Responsive tests
 
-// http://bootstrap-notify.remabledesigns.com/
-
-function Warn(msg) {
-	console.log("Warning: "+msg);
-	$.notify({	message: msg },{  type: 'danger', z_index:100000 });
-}
-
-function Warning(msg) {
-	console.log("Warning: "+msg);
-	$.notify({	message: msg },{  type: 'danger', z_index:100000 });
-}
-
-function Succeed(msg) {
-	console.log("Success: "+msg);
-	$.notify({	message: msg },{  type: 'success', z_index:100000 });
+function ProbeAreaWidth(domid) {
+  var probe=document.createElement("div");
+	 var outer=Get(domid);
+  outer.appendChild(probe);
+	 probe.setAttribute("id","ProbeAreaWidth-probe");
+	 probe.setAttribute("style","width:100%;");
+	 var totalW=probe.clientWidth;
+  outer.removeChild(probe);
+  return totalW;
 }
 
 
-// html rendering based on app layer css styles
+// HTML helpers
 
-function html_Switch( domid, checked=false, disabled=false) {
-	return '<div class="onoffswitch" id="'+domid+'-wrapper"><input type="checkbox" name="'+domid+'" class="onoffswitch-checkbox" id="'+domid+'"'+(checked?" checked":"")+(disabled?" disabled":"")+'>'
-	 +'<label class="onoffswitch-label" for="'+domid+'"><span class="onoffswitch-inner"></span><span class="onoffswitch-switch"></span></label></div>';
-	return '<span class="switch"><input type="checkbox" id="'+domid+'"'+(checked?" checked":"")+(disabled?" disabled":"")+'><span class="slider round"></span></span>';
+// One or more non-breaking spaces
+function nbsp( count=1 ) {
+ var s="";
+ for ( var i=0; i<count; i++ ) s+="&nbsp;";
+ return s;
+}
+
+// Fontawesome Icon
+function faicon( css=null, tip=null, inner="", id=null, style=null, click=null ) {
+ var s='<i';
+ if ( tip ) s+= ' alt="'
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="fa '+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ s+='>';
+ return s+inner+'</i>';
+}
+
+// <I> as an icon tag
+function icon( css=null, tip=null, inner="", id=null, style=null, click=null ) {
+ var s='<i';
+ if ( tip ) s+= ' alt="'
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ s+='>';
+ return s+inner+'</i>';
+}
+
+// Href as a button
+function hrefbtn( inner="", click=null, css=null, id=null, style=null, other=null ) {
+ var s='<a href="#" ';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</a>';
+}
+
+// Form input elements (and datalist)
+function input( id=null, type="text", placeholder=null, css=null, style=null, value=null, min=null, max=null, datalist=null, disabled=null, other=null ) {
+ var s='<input type="'+type+'"';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( placeholder ) s+=' placeholder="'+placeholder+'"';
+ if ( disabled ) s+=' disabled=disabled';
+ if ( value ) s+=' value="'+value+'"';
+ if ( min ) s+=' min="'+min+'"'; else if ( max ) s+=' min="none"';
+ if ( max ) s+=' max="'+max+'"'; else if ( min ) s+=' max="none"';
+ var after="";
+ if ( datalist && is_array(datalist) && datalist.length > 0 ) {
+  s+=' list="'+id+'-datalist"';
+  after+='<datalist id="'+id+'-datalist">';
+  for ( var i=0; i<datalist.length; i++ ) {
+   after+='<option value="'+datalist[i]+'">';
+  }
+  after+='</datalist>';
+ }
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ return s+' />'+after; 
+}
+
+// A button
+function button( inner="", click=null, css=null, id=null, style=null, other=null ) {
+ var s='<button';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</button>';
+}
+
+// p
+function p( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<p';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</p>';
+}
+
+// Heading 6
+function h6( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<h6';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ s+='>';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ return s+inner+'</h6>';
+}
+
+// Heading 5
+function h5( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<h5';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</h5>';
+}
+
+// Heading 4
+function h4( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<h4';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</h4>';
+}
+
+// Heading 3
+function h3( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<h3';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</h3>';
+}
+
+// Heading 2
+function h2( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<h2';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</h2>';
+}
+
+// Heading 1
+function h1( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<h1';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</h1>';
+}
+
+// small tag
+function small( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<small';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</small>';
+}
+
+// span tag
+function span( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<span';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</span>';
+}
+
+// div tag
+function div( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<div';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</div>';
 }
 
 
+// table, tr, th, td, td_ (multi-span)
+
+function thead( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<thead';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</thead>'; 
+}
+
+function tbody( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<tbody';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</tbody>'; 
+}
+
+function tfoot( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<tfoot';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</tfoot>'; 
+}
+
+function table( body="", head="", foot="", css=null, id=null, style=null, other=null ) {
+ var s='<table';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+=' cellpadding=0 cellspacing=0>';
+ return s+(head && head.length>0?thead(head):"")+(body && body.length >0?tbody(body):"")+(foot && foot.length>0?tfoot(foot):"")+'</table>'; 
+}
+
+function th( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<th';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</th>'; 
+}
+
+function tr( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<tr';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</tr>'; 
+}
+
+function td( inner="", width=null, css=null, id=null, style=null, click=null, other=null ) {
+ var s='<td';
+ if ( width ) s+=' width="'+width+'"';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</td>'; 
+}
+
+function td_( columns, inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<td colspan='+columns;
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</td>'; 
+}
+
+// canvas tag
+function canvas( id=null, style=null, css=null, other=null ) {
+ var s='<canvas';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+'</canvas>';
+}
+
+// ol tag
+function ol( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<ol';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</ol>';
+}
+
+// ul tag
+function ul( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<ul';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</ul>';
+}
+
+// li tag
+function li( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<li';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</li>';
+}
+
+// center tag
+function center( inner="", css=null, id=null, style=null, click=null, other=null ) {
+ var s='<center';
+ if ( id ) s+=' id="'+id+'"';
+ if ( css ) s+=' class="'+css+'"';
+ if ( style ) s+=' style="'+style+'"';
+ if ( click ) s+=' onclick="javascript:'+click+'"';
+ if ( other ) { if ( is_array(other) ) { for ( var i=0; i<other.length; i++ ) s+=' '+other[i].name+'="'+other[i].value+'"'; } else s+=other; }
+ s+='>';
+ return s+inner+'</center>';
+}
