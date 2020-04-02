@@ -1,3 +1,3 @@
 <?php
 
- DEFINE('SITE_ROOT','/var/www/micert');
+ DEFINE('SITE_ROOT','/var/www/');
