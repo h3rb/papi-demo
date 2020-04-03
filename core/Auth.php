@@ -19,7 +19,7 @@
   AUTH_DB_USER,
   AUTH_DB_PASS
  );
- } catch (Exception $e) { plog($e); }
+ } catch (Exception $e) { plog($e); die; }
 
  plog('$auth_database: '.vars($auth_database));
 

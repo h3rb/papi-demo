@@ -13,7 +13,7 @@ return true;
 }
 if ( !is_ssl() ) { // The following block is used to restrict access to the insecure version, and bump users to the secure one.
  if (  !startsWith($_SERVER["REMOTE_ADDR"],"127.")
-    && !startsWith($_SERVER["REMOTE_ADDR"],"52.")
+    && !startsWith($_SERVER["REMOTE_ADDR"],"54.")
     && !startsWith($_SERVER["REMOTE_ADDR"],"172.") ) {
   echo 'Access denied to '.$_SERVER['REMOTE_ADDR']; die;
   header("Location: https://api.mydomain.com"); die;
@@ -22,8 +22,11 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 }
 
  include 'core/Page.php';
+ include 'modules/API.php';
 
  global $headers,$session_id,$session,$session_token,$database,$auth,$user,$is_admin;
+
+ if ( false_or_null($database) ) { plog('API:Database error.'); die; }
 
  $gp=getpost();
 
@@ -49,7 +52,7 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
  if ( !isset($g['action']) || false_or_null($g['action']) ) API::Failure("No action provided. ".str_replace("\n","",print_r($gp,true)),ERR_NO_ACTION);
 
  $action = API::GetValue($g,'action',-3);
- if ( $action == 'special' ) {
+ if ( $action == 'special' || $action == 'info' ) {
   API::SpecialRequests($g);
  } else if ( $action == 'search' ) { // returns a search result
  } else if ( $action == 'list' ) { // returns a list of objects of a particular type

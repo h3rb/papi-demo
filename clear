@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /var/www/micert
+cd /var/www/
 #chown root:root cache/logs/last*.txt
 #chmod a+rwx cache/logs/last*.txt
 rm -rf cache/logs/last-last-log.txt

@@ -11,6 +11,31 @@ var api = null;
 
 function ClearSuperGlobals() { $_COOKIE = [];  $_GET = []; }
 
+function CheckMaintenanceMode() {
+ if ( parseInt(getParam('ignore_mode')) == 1 ) return;
+ $.ajax({ type: 'HEAD', url: "/maintenance.txt", success: function(msg){ window.location='/'; } }); 
+}
+
+// Read a page's GET URL variables and return them as an associative array.
+function getparams() {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) { hash = hashes[i].split('='); vars[hash[0]] = hash[1]; }
+    return vars;
+}
+function isString(x) {  return Object.prototype.toString.call(x) === "[object String]"; }
+function getParam(name) {
+ var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+ return (results && results[1]) || undefined;
+}
+function get_protocol() { return location.protocol; }
+function is_ssl() { return (get_protocol() === 'https:'); }
+function getLocalTime() { var d=new Date(); return d.getMilliseconds(); }
+function Timestamped(data) { return { data: data, time: getLocalTime() }; }
+function defined(objele) { try { result= (typeof objele !== 'undefined'); } catch(e) { result=false; } return result; }
+function isset(obj,elem) { return defined(obj) && obj.hasOwnProperty(elem); }
+function isnull(obj) { return (obj !== null); }
+
 class MicertifyAPI {
 
 	constructor() {
@@ -23,6 +48,7 @@ class MicertifyAPI {
 		this.data = null;
 		this.session = null;
 		this.api_url = get_protocol() + "//micertify.com/api";
+		this.s3_url = "/s3";
 		this.sessionHistory = [];
 		this.requestHistory = [];
 		this.messageHistory = [];
@@ -37,11 +63,14 @@ class MicertifyAPI {
 		api = this;
     }	
 	
+	Init() {}
+	/*
 	Init() {
      setTimeout(function(){ 
 	  api.BasicInfo( api.app.RepopulateFromBasicInfo );
 	 },500);
 	}
+	*/
 	
 	GetErrorCodes() { 
  	return {
@@ -73,6 +102,8 @@ class MicertifyAPI {
 	SessionValid() { return api.session && ( typeof api.session === "string" || isString(api.session) ); }
 		
 	ConstructRequestHeaders( r ) {
+		var info=new AppInfo;
+		console.log(info);
 		r.setRequestHeader("X-Papi-Application-Id", "micertify.com");
 		if ( api.session !== null ) r.setRequestHeader( "X-Papi-Session-Token", api.session );
 		if ( api.admin !== null ) r.setRequestHeader( "X-Papi-Admin-Token", api.admin );
@@ -117,14 +148,52 @@ class MicertifyAPI {
 		});
 	}
 	
+	RequestWithContext( post_data, appContext, successFunc= api.DefaultSuccess, doneFunc= api.DefaultDone, errorFunc = api.DefaultError ) {
+		api.requestHistory.push(Timestamped({ data: post_data }));
+		$.ajax({
+			type: "POST",
+			url: api.api_url,
+			data: { data: post_data },
+			wasData : post_data,
+			appContext : appContext,
+			dataType: "json",
+			beforeSend: function(request){api.ConstructRequestHeaders(request);},
+			done: doneFunc,
+			success: successFunc,
+			error: errorFunc,
+			statusCode: { 400: errorFunc }
+		});
+	}
+
+	RequestS3Image( post_data, doneFunc= api.DefaultDone, errorFunc = api.DefaultError ) {
+		api.requestHistory.push(Timestamped({ data: post_data }));
+		$.ajax({
+			type: "POST",
+			url: api.s3_url,
+			data: { data: post_data },
+			wasData : post_data,
+			beforeSend: function(request){api.ConstructRequestHeaders(request);},
+			dataType: "json",
+			done: doneFunc,
+			success: null,
+			error: function (data) {
+				console.log("(errorfunc) S3 to image: "+this.wasData.domid);
+				console.log(this);
+				console.log(data);
+				$("#"+this.wasData.domid).attr('src','data:image/jpeg;base64,' +data.responseText); 
+			}, // hacks
+			statusCode: { 400: errorFunc }
+		});
+	}
+	
 	Successful(e) { return ( e && e.result === "success" ); }
 	
 	ValidateToken ( t, bake=false ) {
 		api.token=t;
 		api.Request( { key: t },
 			bake
-			? function(e) { api.SetSession(api.token); BakeCookie("username",btoa(api.username)); BakeCookie("session",btoa(api.token)); $_COOKIE=Cookies.get(); }
-			: function(e) { api.SetSession(api.token); },
+			? function(e) { api.SetSession(api.token); BakeCookie("username",btoa(api.username)); BakeCookie("session",btoa(api.token)); $_COOKIE=Cookies.get(); api.app.Recurring(); if ( app.after_login ) { app.after_login(); app.after_login=null; } }
+			: function(e) { api.SetSession(api.token); api.app.Recurring(); if ( app.after_login ) { app.after_login(); app.after_login=null; }},
 			function(e){ api.session=null; },
 			function(e) {
 				e.responseData = $.parseJSON(e.responseText);
@@ -156,10 +225,14 @@ class MicertifyAPI {
 	Login() {
 		var data={ "login" : { "username" : api.username, "password" : api.password } }
 		api.Request( data,
-		 function (e) {
-		 if ( api.Successful(e) ) api.SetSession(e.data.key);
-			 api.password=true;
-			 console.log(api);
+         function (e) {
+		  if ( api.Successful(e) ) {
+			 api.SetSession(e.data.key);
+			 api.app.Recurring();
+             if ( app.after_login ) { app.after_login(); app.after_login=null; }
+	      }
+		  api.password=true;
+		  console.log(api);
 		 }, 
 		 api.EmptyFunction
 		);
@@ -188,12 +261,30 @@ class MicertifyAPI {
 		);
 	}
 	
-	Recurring() {
-	 this.doGetBasicInfo();
-	}
-	
 	List( t, onSuccess ) {
 		var data={ action : "list", subject : t };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
+			}
+		 }
+		);	
+	}
+	
+	ListLimited( t, size, onSuccess, input="" ) {
+		var data={ action : "listlimited", subject : t, data:input, size:size };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
+			}
+		 }
+		);	
+	}
+ 
+	Search( t, input, onSuccess ) {
+		var data={ action : "list", subject: t, data:input };
 		api.Request( data,
 		 function(e) {
 			if ( api.Successful(e) ) {
@@ -253,6 +344,10 @@ class MicertifyAPI {
 		);	
 	}
 	
+	GetS3Image( id, domid ) {
+		api.RequestS3Image( {sampling:id, domid:domid } );
+	}
+	
 	Remove( t, id, onSuccess, onFailure=api.DefaultError ) {
 		var data={ action: "remove", subject: t, id: id };
 		api.Request( data,
@@ -282,6 +377,49 @@ class MicertifyAPI {
 		);	
 	}
 	
+	ModifyWithContext( t, id, context, data, onSuccess, onFailure ) {
+		var data={ action: "modify", subject: t, for: id, data: data };
+		api.RequestWithContext( data, context,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, e, this);
+		 }
+		);	
+	}
+	
+	Update( t, id, data, onSuccess, onFailure ) {
+		var data={ action: "update", subject: t, for: id, data: data };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, e, this);
+		 }
+		);	
+	}
+	
+	BasicInfo( onSuccess, onFailure ) {
+		var data={ action: "info", type: "basic" };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				app.settings=e.data.settings;
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, e, this);
+		 }
+		);	
+	}
+ 
 	Myself( onSuccess, onFailure=api.DefaultError ) {
 		var data={ action: "profile" };
 		api.Request( data,
@@ -309,4 +447,37 @@ class MicertifyAPI {
 		 }
 		);	
 	}
-}
+ 
+	GetAppSettings( onSuccess= api.DefaultSuccess, onFailure = api.DefaultError ) {
+		var data={ action: "info", type: "settings" };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				app.settings=e.data;
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, e, this);
+		 }
+		);	
+	}
+ 
+ 
+	SetAppSettings( values=app.settings, onSuccess= api.DefaultSuccess, onFailure = api.DefaultError  ) {
+		var data={ action: "info", type: "settings", set:values };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				app.settings=e.data;
+				onSuccess(this.wasData, e, this);
+			} else onFailure(this.wasData, e, this);
+		 }, 
+		 function(e) {
+			 onFailure(this.wasData, e, this);
+		 }
+		);	
+	}
+	
+};
+
