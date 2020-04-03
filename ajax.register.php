@@ -7,28 +7,28 @@
 
 // var_dump($g); die;
 
- if ( !isset($g['newusername']) || false_or_null($g['newusername']) ) { echo json_encode(array("result"=>"failed","reason"=>"Invalid username.")); die; }
+ if ( !isset($g['newusername']) || false_or_null($g['newusername']) ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Invalid username.")); die; }
 
  $len=strlen($un=trim($g['newusername']));
 
- if ( $len == 0 || $len < 3 ) { echo json_encode(array("result"=>"failed","reason"=>"Username too short.")); die; }
+ if ( $len == 0 || $len < 3 ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Username too short.")); die; }
 
  global $auth_model;
  $results=$auth_model->Select(array('username'=>$un));
 
- if ( is_array($results) && count($results)!==0 ) { echo json_encode(array("result"=>"failed","reason"=>"Username already taken.")); die; }
+ if ( is_array($results) && count($results)!==0 ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Username already taken.")); die; }
 
- if ( !isset($g['email']) || false_or_null($g['email']) ) { echo json_encode(array("result"=>"failed","reason"=>"Email not provided.")); die; }
+ if ( !isset($g['email']) || false_or_null($g['email']) ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Email not provided.")); die; }
 
  $len=strlen($em=trim($g['email']));
 
- if ( $len < 6 ) { echo json_encode(array("result"=>"failed","reason"=>"Invalid email.")); die; }
+ if ( $len < 6 ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Invalid email.")); die; }
 
- if (!filter_var($em, FILTER_VALIDATE_EMAIL) === false) { /* valid */ } else { echo json_encode(array("result"=>"failed","reason"=>"Email provided is not a valid email address")); die; }
+ if (!filter_var($em, FILTER_VALIDATE_EMAIL) === false) { /* valid */ } else { echo deep_json_encode(array("result"=>"failed","reason"=>"Email provided is not a valid email address")); die; }
 
  $results=$auth_model->Select(array('email'=>$em));
 
- if ( is_array($results) && count($results)!==0 ) { echo json_encode(array("result"=>"failed","reason"=>"Email already in use. <a href='/forgot?email=".urlencode($em)."'>Forgot username?</a>")); die; }
+ if ( is_array($results) && count($results)!==0 ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Email already in use. <a href='/forgot?email=".urlencode($em)."'>Forgot username?</a>")); die; }
 
  $pw=($g["newpassword"]);
 
@@ -53,7 +53,7 @@
 
  $z=new Zxcvbn();
  $strength = $z->passwordStrength($pw);
-// if ( $strength['score'] <= 2 ) { echo json_encode(array("result"=>"failed","reason"=>"Please provide a stronger password.")); die; }
+// if ( $strength['score'] <= 2 ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Please provide a stronger password.")); die; }
  }
 
  plog("!!!!ajax.register new user!!!!");
@@ -84,7 +84,7 @@
   "Avatar"=>0,
   "Twitter"=>"",
   "Newsletter"=>0,
-  "RegistrationSurvey"=>json_encode(array(
+  "RegistrationSurvey"=>deep_json_encode(array(
    "m"=>$g["message"],
    "s"=>$g["student"],
    "t"=>$g["teacher"],
@@ -97,7 +97,7 @@
  global $session_model, $auth;
  $auth=$auth_model->Get($new_id);
 
- if ( !isset($auth['ID']) || is_null($auth) || !is_array($auth) ) { echo json_encode(array("result"=>"failed","reason"=>"Unable to create account")); die; }
+ if ( !isset($auth['ID']) || is_null($auth) || !is_array($auth) ) { echo deep_json_encode(array("result"=>"failed","reason"=>"Unable to create account")); die; }
 
  plog("NEW ACCOUNT SIGNUP");
 
@@ -108,4 +108,4 @@
 
  $session_model->Create($auth['ID']);
 
- echo json_encode(array("result"=>"success"));
+ echo deep_json_encode(array("result"=>"success"));

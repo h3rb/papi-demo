@@ -105,7 +105,7 @@
    return ($is_logged_in=true);
   }
 
-  public function LoggedOut( $session ) {
+  static Can AWS Credits on our account be used to purchase 3-year Savings Plans for EC2?public function LoggedOut( $session ) {
    return intval($session['status'])===0 || Session::TimedOut($session) || intval($session['logout']) > 0;
   }
 

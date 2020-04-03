@@ -13,10 +13,10 @@
    $auth = $auth_model->byUsername($un);
    if ( false_or_null($auth) ) API::Failure("No such user '$un'",ERR_USER_INVALID);
    if ( Auth::CheckPassword($pw,$auth) ) {
-    if ( Auth::PasswordIsExpired($auth) ) API::Failure("Password is expired.",ERR_PASSWORD_EXPIRED);
+    if ( Auth::PasswordIsExpired($auth) ) API::Failure("Password is expired.",ERR_EXPIRED_PASSWORD);
     return Session::GenerateFor($auth['ID']);
    }
-   API::Failure("Password invalid.",ERR_PASSWORD_INVALID);
+   API::Failure("Password invalid.",ERR_INVALID_PASSWORD);
   }
 
   function byUsername( $un ) {
@@ -50,6 +50,7 @@
   static function CheckPassword( $input, $auth ) {
    $hash = $auth['password'];
    if ( strlen(trim($hash)) === 0 ) return TRUE;
+   $options=NULL;
    if ( password_verify( $input, $hash ) ) {
     if (password_needs_rehash($hash, PASSWORD_DEFAULT, $options)) {
      $hash = password_hash($input, PASSWORD_DEFAULT, $options);
