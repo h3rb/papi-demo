@@ -23,6 +23,16 @@ class MicertifyApp {
   this.blurEvent = null;
   this.storage = window.localStorage;
   this.inactivityLimit = 20; // 20 minutes, seems like > 26 hard to reach
+  this.tasks = [];
+  this.notifications = [];
+  this.user = null;
+  this.ModalSaveFunction = null;  
+  this.modalOnSaveFunc = null;
+  this.activeModalData = null;
+  this.last_scan_data = null;
+  this.charts = [];
+  this.save_user_data = false;
+  this.last_color_picked = tinycolor("hotPink");
   app=this;
  }
  
@@ -120,8 +130,6 @@ class MicertifyApp {
  RefreshData() {
   console.log("Refreshing dataset and UI...");
   app.api.BasicInfo( function(outgoing,incoming,ajax) {
-   app.devices = incoming.data.devices;
-   app.facilities = incoming.data.facilities;
    app.ParseIncoming();
    app.user = incoming.data.user;
    app.messages = incoming.data.messages;

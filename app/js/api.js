@@ -225,11 +225,11 @@ class MicertifyAPI {
 	Login() {
 		var data={ "login" : { "username" : api.username, "password" : api.password } }
 		api.Request( data,
-         function (e) {
-		  if ( api.Successful(e) ) {
-			 api.SetSession(e.data.key);
-			 api.app.Recurring();
-             if ( app.after_login ) { app.after_login(); app.after_login=null; }
+       function (e) {
+        if ( api.Successful(e) ) {
+        api.SetSession(e.data.key);
+        api.app.Recurring();
+        if ( app.after_login ) { app.after_login(); app.after_login=null; }
 	      }
 		  api.password=true;
 		  console.log(api);
@@ -240,9 +240,9 @@ class MicertifyAPI {
 	
 	Logout() {
 		console.log("Logging out..");
-		var data={ "action" : "logout" }
+		var data={ "action" : "logout" };
 		api.Request( data,
-         function(e) {
+   function(e) {
 			 console.log("Logged out.");
 			 if ( api.Successful(e) ) {
 				 this.session = null;
@@ -265,9 +265,9 @@ class MicertifyAPI {
 		var data={ action : "list", subject : t };
 		api.Request( data,
 		 function(e) {
-			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, e, this);
-			}
+			 if ( api.Successful(e) ) {
+			 	onSuccess(this.wasData, e, this);
+			 }
 		 }
 		);	
 	}
@@ -276,9 +276,9 @@ class MicertifyAPI {
 		var data={ action : "listlimited", subject : t, data:input, size:size };
 		api.Request( data,
 		 function(e) {
-			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, e, this);
-			}
+			 if ( api.Successful(e) ) {
+			 	onSuccess(this.wasData, e, this);
+			 }
 		 }
 		);	
 	}
@@ -287,9 +287,9 @@ class MicertifyAPI {
 		var data={ action : "list", subject: t, data:input };
 		api.Request( data,
 		 function(e) {
-			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, e, this);
-			}
+			 if ( api.Successful(e) ) {
+			 	onSuccess(this.wasData, e, this);
+			 }
 		 }
 		);	
 	}
@@ -298,9 +298,9 @@ class MicertifyAPI {
 		var data={ action : "list", everything:true, subject : t };
 		api.Request( data,
 		 function(e) {
-			if ( api.Successful(e) ) {
-				onSuccess(this.wasData, e, this);
-			}
+			 if ( api.Successful(e) ) {
+			 	onSuccess(this.wasData, e, this);
+			 }
 		 }
 		);	
 	}

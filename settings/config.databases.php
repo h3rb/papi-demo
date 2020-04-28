@@ -6,8 +6,3 @@ define('AUTH_DB_DSN', 'mysql:dbname=dbmicert;host=ls-16b88a14c9734bc7e6b737da353
 define('AUTH_DB_USER','fantastic');
 define('AUTH_DB_PASS','gnxznFbeHMDbLf5tksTUsaj3jqTRHTE7DMcF2EmHn');
 
-// Add your application database below,
-// and in core/Auth.php:
-// and in core/automation.php
-// modify to connect to it after connecting to auth db
-
