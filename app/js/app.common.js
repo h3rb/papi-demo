@@ -370,11 +370,70 @@ function slugify(s) {
 
 // html form handler that supports jquery automation with ajax api
 
+/*
+ * Form Model Description:
+ *
+ *
+ * Example model :
+ [
+	 { name: "id", type:"hidden", value:id },
+	 { name: "name", label: "Name:", type:"string", value: program.name, hint: "Program Name" },
+	 { name: "desc", label: "Description:", type:"text", value: program.desc, hint: "Description" },
+	 { name: "mode", label: "Testing Mode", type: "select", value: parseInt(program.mode),
+		 options: [
+		 { name: "Each test", value: 1 },
+		 { name: "All tests", value: 2 }
+		 ]
+	 }, ...
+	 
+	 ... html inserts
+	 { type: "p", css: "alert alert-dark", text: "When set to <i>ON</i>, prior certified students are given a chance to weigh in to help grade exams that require a human grader.  Final exam results are still approved by you, but their suggested grade shows up if they participate.  This can help cut down grading time.  You can also mark participants as trusted so their grading opinions appear higher in the list.  Participants receive extra bling on their badges indicating they have helped you certify others for something in which they are certified.  Please note that students can opt out of this feature." },
+ ...]
+ * Values for "type":
+ *  -html types:
+ *   p, div, span, h1, h2, h3, h4, h5, h6, hr
+ *  -input types:
+ *   hidden, string, text, markdown, date, slider, range,
+ *   integer, money, decimal, number, select, color, toggle,
+ *   button
+ *  -special form structures:
+ *   extendable ("extend" short form typename)
+ *
+ *   { type:"extendable", model:<data-model>, close:<html|optional>, add:<html|optional> }
+ *
+ * Other parameters:
+ * name    (unqiue) property.name, used to create id
+ * css     css class vlist
+ * style   style to add to tag
+ * list    used to do autocomplete for limited value scenarios (integer, money, decimal, number, string)
+ * text    used to populate the interior of an html element type
+ * label   labels an area, button, or input
+ * range  (optional) for numeric data entry (types integer, decimal, money, date),
+ *         object that must contain the format { min: # (optional), max: # (optional) }
+ * autofocus To enable autofocus feature (true/false)
+ * multiple To enable multiple selections (true/false)
+ * disabled To disable (true/false)
+ * currency For "money" element types, if not present defaults to USD
+ * 
+ * Parameters only for 'extendable':
+ * model    recursion (use with extendable), use "label" to determine what button looks like
+ * close    html for close button, use with extendable, has default
+ * closecss css class for close button, has default
+ * closefirst  (default: false) allow removal of the "first"
+ * add      html for add button, use with extendable, has default
+ * addcss   css class for add button, has default
+ * initial  a number that describes the number of initial copies
+ * limit    (default: 0 = unlimited), limits the number of times an extendable can be extended
+ * minimum  a number that must be less than limit, describing a minimum number of entries
+ */
+
 var html="";
-function PackForm( model, prefix="jsapp-model" ) {
+var pfPrototypes={};
+function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
+ if ( !keepPrototypes || !defined(pfPrototypes[prefix]) ) pfPrototypes[prefix]=[];
  html="";
  html='<table width="100%">';
- model.forEach(function(item,index){
+ model.forEach(function(item,index) {
 	 var n = (item.name?item.name:index);
 	 var i = prefix+'-'+slugify(n);
 	 var v = (item.value?item.value:"");
@@ -384,58 +443,80 @@ function PackForm( model, prefix="jsapp-model" ) {
 	 if ( item.label ) html+='<label for="'+n+'">'+item.label+'</label>';
 	 html+="</td><td>";
 	 if ( item.type === "p" ) {
-		html+='</td><td></td></tr><tr><td colspan=2><p id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</p></td></tr>';
+	 	html+='</td><td></td></tr><tr><td colspan=2><p id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</p></td></tr>';
 	 } else if ( item.type === "div" ) {
-		html+='<div id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</div>';
+	 	html+='<div id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</div>';
 	 } else if ( item.type === "span" ) {
-		html+='<span id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</span>';
+	 	html+='<span id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</span>';
 	 } else if ( item.type === "h1" ) {
-		html+='<h1 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h1>';
+	 	html+='<h1 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h1>';
 	 } else if ( item.type === "h2" ) {
-		html+='<h2 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h2>';
+	 	html+='<h2 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h2>';
 	 } else if ( item.type === "h3" ) {
-		html+='<h3 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h3>';
+	 	html+='<h3 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h3>';
 	 } else if ( item.type === "h4" ) {
-		html+='<h4 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h4>';
+	 	html+='<h4 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h4>';
 	 } else if ( item.type === "h5" ) {
-		html+='<h5 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h5>';
+	 	html+='<h5 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h5>';
 	 } else if ( item.type === "h6" ) {
-		html+='<h6 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h6>';
+	 	html+='<h6 id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</h6>';
+  } else if ( item.type == "hr" ) {
+   html+='<hr size=1 width="'+(item.width?item.width:"60%")+'"/>';
 	 } else if ( item.type === "hidden" ) {
-		html+='<input name="'+n+'" id="'+i+'" type="hidden" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
+ 		html+='<input name="'+n+'" id="'+i+'" type="hidden" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
 	 } else if ( item.type === "string" ) {
-		html+='<input name="'+n+'" id="'+i+'" type="text" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
+ 		html+='<input name="'+n+'" id="'+i+'" type="text" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
+   html+= item.list ? ('list="'+i+'-datalist" ')  : '';
+   html+= '/>';
+		 if ( item.list ) {
+			 html+='<datalist id="'+i+'-datalist">';
+			 for( var j=0; j<item.list.length; j++ ) {
+			 	html+=isString(item.list[j])?'<option value="'+item.list[j]+'">':'<option value="'+item.list[j].value+'">'+item.list[j].text;
+			 }
+			 html+='</datalist>';
+		 }
 	 } else if ( item.type === "text" ) {
-		html+="</td></tr>";
-		html+="</table>";
-		html+='<div id="'+i+'-wrapper"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
-		html+='<table width="100%">';
-		html+="<tr><td>";
-		html+="</td><td>";
+	  html+="</td></tr>";
+	  html+="</table>";
+	  html+='<div id="'+i+'-wrapper"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
+	  html+='<table width="100%">';
+	  html+="<tr><td>";
+	  html+="</td><td>";
 	 } else if ( item.type === "markdown" ) {
-		html+="</td></tr>";
-		html+="</table>";
-		html+='<div id="'+i+'-wrapper" class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
-		html+='<table width="100%">';
-		html+="<tr><td>";
-		html+="</td><td>";
-	} else if ( item.type === "date" ) {
-		html+='<input name="'+n+'" id="'+i+'" type="date" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
+		 html+="</td></tr>";
+		 html+="</table>";
+		 html+='<div id="'+i+'-wrapper" class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
+		 html+='<table width="100%">';
+		 html+="<tr><td>";
+		 html+="</td><td>";
+	 } else if ( item.type === "date" ) {
+ 		html+='<input name="'+n+'" id="'+i+'" type="date" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
+		 html+= item.range ? ( (defined(item.range.min)?(' min="'+item.range.min+'"'):'') + (defined(item.range.max)?(' max="'+item.range.max+'"'):'') + (defined(item.range.step)?(' step="'+item.range.step+'"'):'') + (defined(item.list)?(' list="'+i+'-datalist"'):'') ) : '';
+   html+= item.list ? ('list="'+i+'-datalist" ')  : '';   
+		 html+='/>';
+		 if ( item.list ) {
+			 html+='<datalist id="'+i+'-datalist">';
+			 for( var j=0; j<item.list.length; j++ ) {
+			 	html+=isString(item.list[j])?'<option value="'+item.list[j]+'">':'<option value="'+item.list[j].value+'">'+item.list[j].text;
+			 }
+			 html+='</datalist>';
+		 }   
 	 } else if ( item.type === "slider" ) {
 		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
 	 } else if ( item.type === "integer" || item.type == "decimal" || item.type == "number" || item.type == "money" ) {
 		 if ( item.type == "money" ) html+="<span><b>$</b>";
 		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
 		 html+= item.range ? ( (defined(item.range.min)?(' min="'+item.range.min+'"'):'') + (defined(item.range.max)?(' max="'+item.range.max+'"'):'') + (defined(item.range.step)?(' step="'+item.range.step+'"'):'') + (defined(item.list)?(' list="'+i+'-datalist"'):'') ) : '';
-		 html+='>';
+   html+= item.list ? ('list="'+i+'-datalist" ') : '';
+		 html+='/>';
 		 if ( item.list ) {
-			html+='<datalist id="'+i+'-datalist">';
-			for( var i=0; i<item.list.length; i++ ) {
-				html+=isString(item.list[i])?'<option value="'+item.list[i]+'">':'<option value="'+item.list[i].value+'">'+item.list[i].text;
-			}
-			html+='</datalist>';
+			 html+='<datalist id="'+i+'-datalist">';
+		  for( var j=0; j<item.list.length; j++ ) {
+		  	html+=isString(item.list[j])?'<option value="'+item.list[j]+'">':'<option value="'+item.list[j].value+'">'+item.list[j].text;
+		  }
+			 html+='</datalist>';
 		 }
-		 if ( item.type == "money" ) html+="USD </span>";
+		 if ( item.type == "money" ) html+=(item.currency?item.currency:"USD")+" </span>";
 	 } else if ( item.type === "radio" ) {
 		 if ( item.title ) html+=item.title;
 		 item.options.forEach(function(opt,num){
@@ -460,10 +541,82 @@ function PackForm( model, prefix="jsapp-model" ) {
    html+= '<input type="color" id="'+i+'" name="'+i+'" value="'+(v.length>0?v:"#FF0000")+'">';
 	 } else if ( item.type === "toggle" ) {
 		 html+='<input type="checkbox" id="'+i+'" name="'+i+'" value="'+i+'"'+(istrue(v)?" checked":'')+'>';
-	 }
+	 } else if ( item.type === "extendable" || item.type === "extend" ) {
+   var p=pfPrototypes.length;
+   pfPrototypes[p]=item;
+   var outer=prefix+"-extend-"+i;
+   var add=(item.add?item.add:faicon("fa-add"));
+   var addcss=(item.addcss?item.addcss:"form-extendable-add");
+   html+=div(
+    hrefbtn(add,"packFormExtendAdd('"+prefix+"','"+outer+"')",addcss,outer+"-addbtn"),
+    null, outer, null, [
+       {name:"pf-extendable",value:item.name},
+       {name:"pf-prototype",value:p},
+       {name:"pf-extendable-id",value:i},
+       {name:"pf-counter",value:0},
+       {name:"pf-wrapper",value:wrapper},
+       {name:"pf-outer",value:outer},
+       {name:"pf-prefix",value:prefix}
+    ]
+   );
+  }
 	 html+="</td></tr>";
  });
  return html;
+}
+
+function packFormExtendClose( outer, itemNumber, closeFirst=false ) {
+ var wrapper=Get(outer);
+ var counter=parseInt($(wrapper).attr("pf-counter"));
+ var prototype=parseInt($(wrapper).attr("pf-prototype"));
+ var inner=outer+"-inner-"+itemNumber;
+ var ele=Get( inner );
+ ele.parentNode.removeChild(ele);
+ counter--;
+ $(wrapper).attr("pf-counter",counter);
+ var elements=document.querySelectorAll('[pf-outer="'+outer+'"]');
+ var i=1;
+ elements.forEach(function(e) {
+  $(e).attr("pf-number",i);
+  i++;
+ });
+}
+
+function packFormExtendAdd( prefix, outer ) {
+ var wrapper=Get(outer);
+ var counter=parseInt($(wrapper).attr("pf-counter"));
+ var prototype=parseInt($(wrapper).attr("pf-prototype"));
+ var item=pfPrototypes[prefix][prototype];
+ var closebtn="";
+ var makeCloseButton=false;
+ var disableAddButton=false;
+ if ( !undefined(item.limit) ) {
+  if ( item.limit != 0 ) {
+   if ( item.limit <= counter ) makeCloseButton=true;
+   if ( item.limit >= counter ) disableAddButton=true;
+  }
+ }
+ if ( counter > item.minimum ) makeCloseButton=true;
+ counter++;
+ var inner=outer+"-inner-"+counter;
+ if ( makeCloseButton ) {
+  var close=(item.close?item.close:faicon("fa-close"));
+  var closecss=(item.closecss?item.closecss:"form-extendable-close");
+  closebtn=hrefbtn(close,"packFormExtendClose('"+outer+"',"+counter+","+(item.closefirst?"true":"false")+")",closecss);
+ }
+ var html=div(
+  div( PackForm( item.model, inner, true )+closebtn,
+   null,wrapper,null,null,[
+    {name:"pf-prototype",value:prototype},
+    {name:"pf-number",value:counter},
+    {name:"pf-outer",value:outer},
+   ]
+  ),
+  null,inner
+ );
+ $(wrapper).attr("pf-counter",counter);
+ $(Get(wrapper)).append(div(html,null,inner));
+ jQueryForm( item.model, inner );
 }
 
 function enableByValue( ele ) {
@@ -471,53 +624,50 @@ function enableByValue( ele ) {
 	var n = (item.name?item.name:index);
 	var i = ele.id;
 	var p = (item.hint?item.hint:"");
-	if ( !( item.type == 'radio' || item.type == 'select' ) ) return;
-	if ( item.type == 'radio' ) {
-     var value=null;
-	 var value_domid=null;
-	 var opt_list=[];
- 	 for ( var i=0; i<item.options.length; i++ ) {
-		 var domid=i+'-'+num;
+	if ( !( item.type === 'radio'
+      || item.type === 'select') ) return;
+	if ( item.type === 'radio' ) {
+  var value=null;
+  var value_domid=null;
+  var opt_list=[];
+	 for ( var i=0; i<item.options.length; i++ ) {
+ 	 var domid=i+'-'+num;
 		 opt_list[opt_list.length]=domid;
-	   	 var domlist;
-	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
-		 else { domlist=[]; domlist[0]=item.options[i].enable; }
-	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
-		 if ( $(Get(domid)).is(':checked') || isChecked(Get(domid)) ) {
-			value=i;
-			value_domid=domid;
-			for(var j=0;j<domlist.length;j++){
-			 Get('#'+domlist[j]).prop("disabled",true);
-			 Get('#'+domlist[j]).removeAttr("disabled");
-			}
+   var domlist;
+   if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
+	  else { domlist=[]; domlist[0]=item.options[i].enable; }
+   for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
+	  if ( $(Get(domid)).is(':checked') || isChecked(Get(domid)) ) {
+	  	value=i;
+	  	value_domid=domid;
+ 	 	for(var j=0;j<domlist.length;j++){
+  		 Get('#'+domlist[j]).prop("disabled",true);
+  		 Get('#'+domlist[j]).removeAttr("disabled");
+	 		}
 		 } else {
-			for ( var j=0; j<domlist.length; j++ ) {
-			 Get('#'+domlist[j]).setAttribute("disabled",true);
-			}
+		 	for ( var j=0; j<domlist.length; j++ ) Get('#'+domlist[j]).setAttribute("disabled",true);
 		 }
 	 }
-	} else if ( item.type == 'select' ) {
+	} else if ( item.type === 'select' ) {
 	 var value=ele.selectedIndex;
 	 var value_domid=value?(i+'-'+value):null;
 	 var opt_list=[];
  	 for ( var i=0; i<item.options.length; i++ ) {
-		 var domid=i+'-'+num;
-		 opt_list[opt_list.length]=domid;
-	   	 var domlist;
-	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
-		 else { domlist=[]; domlist[0]=item.options[i].enable; }
-	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
-		 if ( value == i ) {
-			for(var j=0;j<domlist.length;j++){
-			 Get('#'+domlist[j]).prop("disabled",true);
-			 Get('#'+domlist[j]).removeAttr("disabled");
-			}
+		  var domid=i+'-'+num;
+		  opt_list[opt_list.length]=domid;
+	   var domlist;
+	   if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
+		  else { domlist=[]; domlist[0]=item.options[i].enable; }
+	   for (var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
+		  if ( value == i ) {
+		 	for(var j=0;j<domlist.length;j++){
+	 		 Get('#'+domlist[j]).prop("disabled",true);
+	 		 Get('#'+domlist[j]).removeAttr("disabled");
+ 			}
 		 } else {
-			for ( var j=0; j<domlist.length; j++ ) {
-			 Get('#'+domlist[j]).setAttribute("disabled",true);
-			}
+    for ( var j=0; j<domlist.length; j++ ) Get('#'+domlist[j]).setAttribute("disabled",true);
 		 }
-	  }
+	 }
 	}
 }
 
@@ -528,227 +678,211 @@ function revealByValue( ele ) {
 	var p = (item.hint?item.hint:"");
 	if ( !( item.type == 'radio' || item.type == 'select' ) ) return;
 	if ( item.type == 'radio' ) {
-     var value=null;
+  var value=null;
 	 var value_domid=null;
 	 var opt_list=[];
- 	 for ( var i=0; i<item.options.length; i++ ) {
+	 for ( var i=0; i<item.options.length; i++ ) {
 		 var domid=id+'-'+i;
 		 opt_list[opt_list.length]=domid;
-	   	 var domlist;
-	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
+ 	 var domlist;
+ 	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
 		 else { domlist=[]; domlist[0]=item.options[i].enable; }
-	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
+ 	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
 		 if ( $(Get(domid)).is(':checked') || isChecked(Get(domid)) ) {
-			value=i;
-			value_domid=domid;
-			for(var j=0;j<domlist.length;j++){
-			 $('#'+domlist[j]+'-wrapper').show();
-			}
+ 			value=i;
+ 			value_domid=domid;
+ 			for(var j=0;j<domlist.length;j++) $('#'+domlist[j]+'-wrapper').show();
 		 } else {
-			for ( var j=0; j<domlist.length; j++ ) {
-			 $('#'+domlist[j]+'-wrapper').hide();
-			}
+ 			for ( var j=0; j<domlist.length; j++ ) $('#'+domlist[j]+'-wrapper').hide();
 		 }
 	 }
 	} else if ( item.type == 'select' ) {
 	 var value=ele.selectedIndex;
 	 var value_domid=value?(i+'-'+value):null;
 	 var opt_list=[];
- 	 for ( var i=0; i<item.options.length; i++ ) {
+ 	for ( var i=0; i<item.options.length; i++ ) {
 		 var domid=id+'-'+i;
 		 opt_list[opt_list.length]=domid;
-	   	 var domlist;
-	   	 if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
+	  var domlist;
+	  if ( is_array(item.options[i].enable) ) domlist=item.options[i].enable;
 		 else { domlist=[]; domlist[0]=item.options[i].enable; }
-	   	 for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
+	  for(var i=0;i<domlist.length;i++) domlist[i]=item.prefix+'-'+slugify(domlist[i]);
 		 if ( value == i ) {
-			for(var j=0;j<domlist.length;j++){
-			 $('#'+domlist[j]+'-wrapper').show();
-			}
+ 			for(var j=0;j<domlist.length;j++) $('#'+domlist[j]+'-wrapper').show();
 		 } else {
-			for ( var j=0; j<domlist.length; j++ ) {
-			 $('#'+domlist[j]+'-wrapper').hide();
-			}
+ 			for (var j=0; j<domlist.length; j++) $('#'+domlist[j]+'-wrapper').hide();
 		 }
-	  }
+	 }
 	}
 }
 
 // call to bind functions in jquery after packing the form and spewing it
 function jQueryForm( model, prefix="jsapp-model" ) {
  model.forEach(function(item,index){
-	 item.prefix=prefix;
-	 var n = (item.name?item.name:index);
-	 var i = prefix+'-'+slugify(n);
-	 var v = (item.value?item.value:"");
-	 var p = (item.hint?item.hint:"");
-	 var ele=Get(i);
-  if ( !ele ) { console.log("Warning: no valid element found by id "+i); }
-	 ele.formitem=item;
-	 if ( item.hide ) $("#"+i).hide();
-	 if ( item.hover ) $("#"+i).hover(item.hover.enter,item.hover.leave);
-	 if ( item.click ) $("#"+i).click(item.click);
-	 if ( item.scroll ) $("#"+i).scroll(item.scroll);
-	 if ( item.toggle ) $("#"+i).toggle(item.toggle.even,item.toggle.odd);
-	 if ( item.select ) $("#"+i).select(item.select);
-	 if ( item.resize ) $("#"+i).resize(item.resize);
-	 if ( item.blur ) $("#"+i).blur(item.blur);
-	 if ( item.load ) $("#"+i).load(item.load);
-	 if ( item.unload ) $("#"+i).contextmenu(item.unload);
-	 if ( item.input ) $("#"+i).input(item.input);
-	 if ( item.menu ) $("#"+i).contextmenu(item.menu);
-	 if ( item.focus ) $("#"+i).focus(item.focus);
-	 if ( item.focusin ) $("#"+i).focusin(item.focusin);
-	 if ( item.focusout ) $("#"+i).focusout(item.focusout);
-	 if ( item.submit ) $("#"+i).submit(item.submit);
-	 if ( item.mousemove ) $("#"+i).mousemove(item.mousemove);
-	 if ( item.mouseenter ) $("#"+i).mouseenter(item.mouseenter);
-	 if ( item.mouseleave ) $("#"+i).mouseleave(item.mouseleave);
-	 if ( item.mouseover ) $("#"+i).mouseover(item.mouseover);
-	 if ( item.mouseout ) $("#"+i).mouseout(item.mouseout);
-	 if ( item.mousedown ) $("#"+i).mousedown(item.mousedown);
-	 if ( item.mouseup ) $("#"+i).mouseup(item.mouseup);
-	 if ( item.keyup ) $("#"+i).keyup(item.keyup);
-	 if ( item.keydown ) $("#"+i).keydown(item.keydown);
-	 if ( item.keypress ) $("#"+i).keypress(item.keypress);
-	 if ( item.change ) $("#"+i).change(item.change);
-	 // "on"	 
-	 if ( item.onmousemove ) $("#"+i).mousemove(item.onmousemove);
-	 if ( item.onmouseenter ) $("#"+i).mouseenter(item.onmouseenter);
-	 if ( item.onmouseleave ) $("#"+i).mouseleave(item.onmouseleave);
-	 if ( item.onmouseover ) $("#"+i).mouseover(item.onmouseover);
-	 if ( item.onmouseout ) $("#"+i).mouseout(item.onmouseout);
-	 if ( item.onmousedown ) $("#"+i).mousedown(item.onmousedown);
-	 if ( item.onmouseup ) $("#"+i).mouseup(item.onmouseup);
-	 if ( item.onkeydown ) $("#"+i).keydown(item.onkeydown);
-	 if ( item.onkeypress ) $("#"+i).keypress(item.onkeypress);
-	 if ( item.onkeyup ) $("#"+i).keyup(item.onkeyup);
-	 if ( item.onchange ) $("#"+i).change(item.onchange);
-	 if ( item.oninput ) $("#"+i).input(item.oninput);
-	 if ( item.contextmenu ) $("#"+i).contextmenu(item.contextmenu);
-	 if ( item.type === "markdown" ) {
-		 item.live=woofmark(Get(i),{
-  parseMarkdown: function (input) {
-    return megamark(input, {
-      tokenizers: [{
+	  item.prefix=prefix;
+	  var n = (item.name?item.name:index);
+	  var i = prefix+'-'+slugify(n);
+	  var v = (item.value?item.value:"");
+	  var p = (item.hint?item.hint:"");
+	  var ele=Get(i);
+   if ( !ele ) { console.log("Warning: no valid element found by id "+i); }
+	  ele.formitem=item;
+	  if ( item.hide ) $("#"+i).hide();
+	  if ( item.hover ) $("#"+i).hover(item.hover.enter,item.hover.leave);
+	  if ( item.click ) $("#"+i).click(item.click);
+	  if ( item.scroll ) $("#"+i).scroll(item.scroll);
+	  if ( item.toggle ) $("#"+i).toggle(item.toggle.even,item.toggle.odd);
+	  if ( item.select ) $("#"+i).select(item.select);
+	  if ( item.resize ) $("#"+i).resize(item.resize);
+	  if ( item.blur ) $("#"+i).blur(item.blur);
+	  if ( item.load ) $("#"+i).load(item.load);
+	  if ( item.unload ) $("#"+i).contextmenu(item.unload);
+	  if ( item.input ) $("#"+i).input(item.input);
+	  if ( item.menu ) $("#"+i).contextmenu(item.menu);
+	  if ( item.focus ) $("#"+i).focus(item.focus);
+	  if ( item.focusin ) $("#"+i).focusin(item.focusin);
+	  if ( item.focusout ) $("#"+i).focusout(item.focusout);
+	  if ( item.submit ) $("#"+i).submit(item.submit);
+	  if ( item.mousemove ) $("#"+i).mousemove(item.mousemove);
+	  if ( item.mouseenter ) $("#"+i).mouseenter(item.mouseenter);
+	  if ( item.mouseleave ) $("#"+i).mouseleave(item.mouseleave);
+	  if ( item.mouseover ) $("#"+i).mouseover(item.mouseover);
+	  if ( item.mouseout ) $("#"+i).mouseout(item.mouseout);
+	  if ( item.mousedown ) $("#"+i).mousedown(item.mousedown);
+	  if ( item.mouseup ) $("#"+i).mouseup(item.mouseup);
+	  if ( item.keyup ) $("#"+i).keyup(item.keyup);
+	  if ( item.keydown ) $("#"+i).keydown(item.keydown);
+	  if ( item.keypress ) $("#"+i).keypress(item.keypress);
+	  if ( item.change ) $("#"+i).change(item.change);
+	  // "on"	 
+	  if ( item.onmousemove ) $("#"+i).mousemove(item.onmousemove);
+	  if ( item.onmouseenter ) $("#"+i).mouseenter(item.onmouseenter);
+	  if ( item.onmouseleave ) $("#"+i).mouseleave(item.onmouseleave);
+	  if ( item.onmouseover ) $("#"+i).mouseover(item.onmouseover);
+	  if ( item.onmouseout ) $("#"+i).mouseout(item.onmouseout);
+	  if ( item.onmousedown ) $("#"+i).mousedown(item.onmousedown);
+	  if ( item.onmouseup ) $("#"+i).mouseup(item.onmouseup);
+	  if ( item.onkeydown ) $("#"+i).keydown(item.onkeydown);
+	  if ( item.onkeypress ) $("#"+i).keypress(item.onkeypress);
+	  if ( item.onkeyup ) $("#"+i).keyup(item.onkeyup);
+	  if ( item.onchange ) $("#"+i).change(item.onchange);
+	  if ( item.oninput ) $("#"+i).input(item.oninput);
+	  if ( item.contextmenu ) $("#"+i).contextmenu(item.contextmenu);
+	  if ( item.type === "markdown" ) {
+		  item.live=woofmark(Get(i),{
+     parseMarkdown: function (input) {
+      return megamark(input, {
+       tokenizers: [{
         token: /(^|\s)@([A-z]+)\b/g,
-        transform: function (all, separator, id) {
-          return separator + '<a href="/users/' + id + '">@' + id + '</a>';
-        }
-      }]
-    });
-  },
-  parseHTML: function (input) {
-    return domador(input, {
-      transform: function (el) {
-        if (el.tagName === 'A' && el.innerHTML[0] === '@') {
-          return el.innerHTML;
-        }
-      }
-	});
-  },
-  fencing: true,
-  html: false,
-  wysiwyg: true,
-  defaultMode: 'wysiwyg'
-		 });
+        transform: function (all, separator, id) { return separator + '<a href="/users/' + id + '">@' + id + '</a>'; }
+       }]
+      });
+     },
+     parseHTML: function (input) {
+      return domador(input, {
+       transform: function (el) {if (el.tagName === 'A' && el.innerHTML[0] === '@') { return el.innerHTML; } }
+      });
+     },
+     fencing: true,
+     html: false,
+     wysiwyg: true,
+     defaultMode: 'wysiwyg'
+		  );
 	 }
 	 // enable,reveal expects "domid" or ["domid","domid2"...]
 	 if ( item.type == 'toggle' ) {
-       switcher(ele);
-	   if ( item.enable ) {
-	   	 var domlist;
-	   	 if ( is_array(item.enable) ) domlist=item.enable;
-	     else { domlist=[]; domlist[0]=item.enable; }
-	   	 var ele=Get(i);
-	   	 for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
-	   	 ele.domlist=domlist;
-	   	 $(ele).toggle(
-	   	  function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);}},
-	   	  function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}}
-	   	 );
-		 $(ele).click(function(e){
-			 console.log(this);
-			 if ( ($(this).is(":checked") || isChecked(this)) ) {
-				for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);} 
-				if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
-			 } else {
-				for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}
-				if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
-			 }			 
-		 });
-		 
-	   	 if ( istrue(item.value) ) {
-			 for(var k=0;k<domlist.length;k++){Get(domlist[k]).setAttribute("disabled",true);}
-	   	 } else {
-			 for(var k=0;k<domlist.length;k++){Get(domlist[k]).prop("disabled",true);Get('#'+domlist[k]).removeAttr("disabled");}
-		 }
-	   }
-	   if ( item.reveal ) {
-	   	 var domlist;
-	   	 if ( is_array(item.reveal) ) domlist=item.reveal;
-	     else { domlist=[]; domlist[0]=item.reveal; }
-		 console.log(domlist);
-	   	 var ele=Get(i);
-	   	 for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
-	   	 ele.domlist=domlist;
-	   	 $(ele).toggle(
-	   	  function(e){console.log("even");for(var i=0;i<this.domlist.length;i++){$(this.domlist[i]).show();} if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); },
-	   	  function(e){console.log("odd"); for(var i=0;i<this.domlist.length;i++){$(this.domlist[i]).hide();} if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); }
-	   	 );
-		 $(ele).click(function(e){
-			 if ( ($(this).is(":checked") || isChecked(this)) ) {
-				for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).show();} 
-				if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
-			 } else {
-				for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).hide();}
-				if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
-			 }			 
-		 });
-	   	 if ( istrue(item.value) ) {
-			 for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).show();}
-	   	 } else {
-			 for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).hide();}
-		 }
-	   }
+   switcher(ele);
+	  if ( item.enable ) {
+	   var domlist;
+	   if ( is_array(item.enable) ) domlist=item.enable;
+	   else { domlist=[]; domlist[0]=item.enable; }
+	   var ele=Get(i);
+	   for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
+	   ele.domlist=domlist;
+	   $(ele).toggle(
+	    function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);}},
+	    function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}}
+	   );
+		  $(ele).click(function(e){
+			  console.log(this);
+			  if ( ($(this).is(":checked") || isChecked(this)) ) {
+			 	for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);} 
+			 	if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
+			  } else {
+			 	for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}
+			 	if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
+			  }			 
+  	 });		 
+	   if ( istrue(item.value) ) {
+	  	 for(var k=0;k<domlist.length;k++){Get(domlist[k]).setAttribute("disabled",true);}
+	   } else {
+			  for(var k=0;k<domlist.length;k++){Get(domlist[k]).prop("disabled",true);Get('#'+domlist[k]).removeAttr("disabled");}
+		  }
+	  }
+	  if ( item.reveal ) {
+	   var domlist;
+	   if ( is_array(item.reveal) ) domlist=item.reveal;
+	   else { domlist=[]; domlist[0]=item.reveal; }
+		  console.log(domlist);
+	   var ele=Get(i);
+	   for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
+	   ele.domlist=domlist;
+	   $(ele).toggle(
+	   	function(e){console.log("even");for(var m=0;m<this.domlist.length;m++){$(this.domlist[m]).show();} if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); },
+	    function(e){console.log("odd"); for(var m=0;m<this.domlist.length;m++){$(this.domlist[m]).hide();} if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); }
+	   );
+		  $(ele).click(function(e){
+			  if ( ($(this).is(":checked") || isChecked(this)) ) {
+			 	for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).show();} 
+			 	if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
+			  } else {
+			 	for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).hide();}
+			 	if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
+			  }			 
+		  });
+	   if ( istrue(item.value) ) {
+			  for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).show();}
+	   } else {
+			  for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).hide();}
+		  }
+	  }
 	 }
 	 // enable or reveal appear inside the options list
 	 // enable,reveal expects [] of { value:"triggervalue", elements: "domid" or ["domid","domid"] }
 	 if ( item.type == 'radio' ) {
-	   if ( item.enable ) {
-         for ( var i=0; i<item.options.length; i++ ) {
-		  var opt_i = i+'-'+num;
-		  var opt_ele=Get(opt_i);
-		  opt_ele.formitem=item;
-	   	  $(opt_ele).change( function(e){ enableByValue(this); } );
-		  if ( $(opt_ele).is(':checked') ) enableByValue(opt_ele);
-		 }
-	   }
-	   if ( item.reveal ) {
-         for ( var i=0; i<item.options.length; i++ ) {
-		  var opt_i = i+'-'+num;
-		  var opt_ele=Get(opt_i);
-		  opt_ele.formitem=item;
-	   	  $(opt_ele).change( function(e){ revealByValue(this); } );
-		  if ( $(opt_ele).is(':checked') ) revealByValue(opt_ele);
-		 }
-	   }
+	  if ( item.enable ) {
+    for ( var k=0; k<item.options.length; k++ ) {
+	    var opt_i = k+'-'+num;
+	    var opt_ele=Get(opt_i);
+	    opt_ele.formitem=item;
+	    $(opt_ele).change( function(e){ enableByValue(this); } );
+	    if ( $(opt_ele).is(':checked') ) enableByValue(opt_ele);
+	 	 }
+	  }
+	  if ( item.reveal ) {
+    for ( var i=0; k<item.options.length; k++ ) {
+		   var opt_i = k+'-'+num;
+		   var opt_ele=Get(opt_i);
+		   opt_ele.formitem=item;
+	    $(opt_ele).change( function(e){ revealByValue(this); } );
+		   if ( $(opt_ele).is(':checked') ) revealByValue(opt_ele);
+		  }
+	  }
 	 }
 	 // enable or reveal appear inside the options list
 	 // enable,reveal expects [] of { value:"triggervalue", elements: "domid" or ["domid","domid"] }
 	 if ( item.type == 'select' ) {
-	   if ( item.enable ) {
-         for ( var i=0; i<item.options.length; i++ ) {
-	   	  $(ele).change( function(e){ enableByValue(this); } );
-		 }
-	   }
-	   if ( item.reveal ) {
-         for ( var i=0; i<item.options.length; i++ ) {
-	   	  $(ele).change( function(e){ revealByValue(this); } );
-		 }
-	   }
-	   $(ele).trigger('change');
+   if ( item.enable ) for ( var k=0; k<item.options.length; k++ ) $(ele).change( function(e){ enableByValue(this); } );
+   if ( item.reveal ) for ( var k=0; k<item.options.length; k++ ) $(ele).change( function(e){ revealByValue(this); } );
+   $(ele).trigger('change');
 	 }
+  // extendable
+  if ( item.type == 'extend' || item.type == 'extendable' ) {
+   if ( defined(item.initial) && item.initial > 0 ) {
+    var outer=prefix+"-extend-"+i;
+    for ( var x=0; x<item.initial; x++ ) $(Get(outer+"-addbtn")).trigger('click');
+   }
+  }
  });
  return html;
 }
@@ -776,8 +910,19 @@ function UnpackForm( model, prefix="jsapp-model" ) {
 		 else if ( item.type == "date" && v.length < 1 ) return FormErr(item,model,prefix);
 		 else if ( item.type == "toggle" && isfalse(v) ) return FormErr(item,model,prefix);
 		 else if ( (item.type === "integer" || item.type == "decimal" || item.type == "number" || item.type == "money" )
-                && (item.range && beyond_range(v,item.range.min,item.range.max)) ) return FormErr(item,model,prefix);
+          && (item.range && beyond_range(v,item.range.min,item.range.max)) ) return FormErr(item,model,prefix);
 	 }
+  if ( item.type == "extend" || item.type == "extendable" ) {
+   var unpacked=[];
+   var outer=prefix+"-extend-"+index;
+   var wrapper=Get(outer);
+   var inners=$(wrapper).children("div");
+   inners.forEach(function(e){
+    var pre=$(e).attr("id");
+    unpacked[unpacked.length]=UnpackForm(item.model,pre);
+   });
+   data[n]=unpacked;
+  } else
 	 if ( !(item.type == 'h1'      || item.type == 'h2'
 	    || item.type == 'h3'	      || item.type == 'h4'
 	    || item.type == 'h5'       || item.type == 'h6'
@@ -799,7 +944,7 @@ function SaveButton( where, model, saveFunction, text="Save Changes", prefix="js
 	ele.model=model;
 	ele.saveFunction = saveFunction;
 	$(ele).click(function(e){
-     this.setAttribute("disabled",true);
+  this.setAttribute("disabled",true);
 	 this.saveFunction(e);
 	 $(this).prop("disabled",true);
 	 $(this).removeAttr("disabled");
@@ -816,20 +961,15 @@ function Modelize( injectpoint, prefix="jsapp-model", model, jqueryIt=true ) {
 function defaultUnmapForm(data) { return data; }
 
 function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc, prefix="jsapp-model" ) {
- 	  console.log(model);
-	  var data=UnpackForm(model,prefix);
-	  console.log(data);
-	  if ( data.error ) {
-		  Warn(data.error.message);
-	  } else {
-		app.api.Modify("Program", data.id, 
-		  unmapFunc(data),
-		  completionFunc,
-		  function(e){
-			  Warn("Unable to save changes!");
-		  }
-		 );
-	  }
+ console.log(model);
+	var data=UnpackForm(model,prefix);
+	console.log(data);
+	if ( data.error ) Warn(data.error.message);
+	else app.api.Modify("Program", data.id, 
+		unmapFunc(data),
+		completionFunc,
+		function(e){ Warn("Unable to save changes!"); }
+ );
 }
 
 // Responsive tests
