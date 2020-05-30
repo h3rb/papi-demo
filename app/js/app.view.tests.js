@@ -49,6 +49,7 @@ const Views_Tests = {
 		var crumbs = '<li><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.dashboard);"><i class="fa fa-dashboard"></i> Home</a></li>';
 		crumbs += '<li><a href="#" onclick="javascript:mcapp.doPrograms();">'+program.name+'</a></li>';
 		crumbs += '<li class="active">'+test.name+'</li>';
+  app.last_crumblisthtml=crumbs;
 		$("#mcapp-header-breadcrumb").html( crumbs );
 		var content="";
   

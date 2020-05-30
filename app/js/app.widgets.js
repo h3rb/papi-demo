@@ -47,6 +47,8 @@ const AppWidgets = {
 	 $("#mcapp-header-breadcrumb").html( crumblisthtml );
 	 $("#mcapp-content-box-title").html(boxtitle);
 	 $("#mcapp-content-box-body").html(body);
+		app.last_crumblist=crumblist;
+		app.last_crumblisthtml=crumblisthtml;
  },
 	
  EmptyMain: function () {

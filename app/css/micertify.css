@@ -69,3 +69,15 @@
     right: 0px; 
     background-color: #00EE88; 
 }
+
+
+
+.bottom-right {
+  background-color:white;
+  border-radius: 8px;
+  position: fixed;
+  padding: 16px;
+  right: 0;
+  bottom: 0;
+  width: auto;
+}

@@ -27,7 +27,31 @@ const Views_QA = {
    }
 	 ];
   
-	 app.Modal( "New Question", PackForm( model ), model, function(model,e) {
+ 	var crumbs = '<li><a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.dashboard);"><i class="fa fa-dashboard"></i> Home</a></li>';
+		crumbs += '<li><a href="#" onclick="javascript:mcapp.doPrograms();">'+app.current.program.name+'</a></li>';
+		crumbs += '<li class="active">'+app.current.test.name+'</li>';
+		crumbs += '<li class="active">New Question</li>';
+
+  
+  app.activeDataModel=model;
+	 app.Main( "New Question", app.current.test.name,
+           "Question Details",
+            PackForm( model )
+            + div(
+                hrefbtn(button("Cancel",null,"btn"),"mcapp.drawEditAssessment("+app.current.test.id+");")
+              + nbsp(5)
+              + hrefbtn(button("Save",null,"btn bg-blue"),"mcapp.SaveNewQuestion();"),
+              "bottom-right"
+             ),
+            null
+  );
+		$("#mcapp-header-breadcrumb").html( crumbs );
+  jQueryForm(model);
+  
+ },
+ 
+ SaveNewQuestion: function() {
+   var model=app.activeDataModel;
  	 console.log(model);
 	  var data=UnpackForm(model);
    console.log(data);
@@ -39,11 +63,7 @@ const Views_QA = {
 		  Succeed("New Question Created!");
 		  app.drawEditAssessment(incoming.data.id);
 	   }
-	  );*/
-	  console.log(data);
-	 });
-  jQueryForm(model);
-  
+	  );*/  
  },
  
  drawEditQuestion: function ( question_id ) {
