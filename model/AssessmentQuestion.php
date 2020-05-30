@@ -26,7 +26,7 @@ abstract class AssessmentQuestionType extends Enum {
     "parent" => array( "r_Assessment", 'reference' ),
     "skippable" => array( "Skippable", 'bool' ),
     "timed" => array( "LimitTime", 'bool' ),
-    "limitanswers" => array( "LimitTime", 'bool' ),
+    "limitanswers" => array( "LimitAnswers", 'bool' ),
     "seconds" => array( "Seconds", 'integer' ),
     "type" => array( "Type", 'AssessmentQuestionType' ),
     "reorder" => array( "RandomizeAnswerOrder", 'bool' ),

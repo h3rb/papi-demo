@@ -227,6 +227,12 @@ function scrollFunction() {
   }
 }
 
+function html_Switch( domid, checked=false, disabled=false) {
+	return '<div class="onoffswitch" id="'+domid+'-wrapper"><input type="checkbox" name="'+domid+'" class="onoffswitch-checkbox" id="'+domid+'"'+(checked?" checked":"")+(disabled?" disabled":"")+'>'
+	 +'<label class="onoffswitch-label" for="'+domid+'"><span class="onoffswitch-inner"></span><span class="onoffswitch-switch"></span></label></div>';
+	return '<span class="switch"><input type="checkbox" id="'+domid+'"'+(checked?" checked":"")+(disabled?" disabled":"")+'><span class="slider round"></span></span>';
+}
+
 // Scroll to an element
 
 function scrollElement( ele, delayed=2000 ) { 
@@ -403,7 +409,7 @@ function slugify(s) {
  *
  * Other parameters:
  * name    (unqiue) property.name, used to create id
- * css     css class vlist
+ * css     css class list
  * style   style to add to tag
  * list    used to do autocomplete for limited value scenarios (integer, money, decimal, number, string)
  * text    used to populate the interior of an html element type
@@ -416,21 +422,25 @@ function slugify(s) {
  * currency For "money" element types, if not present defaults to USD
  * 
  * Parameters only for 'extendable':
- * model    recursion (use with extendable), use "label" to determine what button looks like
+ * model    recursion (use with extendable)
  * close    html for close button, use with extendable, has default
  * closecss css class for close button, has default
  * closefirst  (default: false) allow removal of the "first"
+ * closebefore (default: false) moves the close button before the form copy
  * add      html for add button, use with extendable, has default
  * addcss   css class for add button, has default
  * initial  a number that describes the number of initial copies
  * limit    (default: 0 = unlimited), limits the number of times an extendable can be extended
  * minimum  a number that must be less than limit, describing a minimum number of entries
+ * title    A title for each section, where ### is replaced with the number of the extension
+ * inner    describes the CSS class list to applied to each extendable form copy
  */
 
 var html="";
 var pfPrototypes={};
 function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
- if ( !keepPrototypes || !defined(pfPrototypes[prefix]) ) pfPrototypes[prefix]=[];
+ var property=prefix.replaceAll("-","");
+ if ( !keepPrototypes || !defined(pfPrototypes[property]) ) pfPrototypes[property]=[];
  html="";
  html='<table width="100%">';
  model.forEach(function(item,index) {
@@ -477,18 +487,12 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 		 }
 	 } else if ( item.type === "text" ) {
 	  html+="</td></tr>";
-	  html+="</table>";
+   html+='<tr><td colspan=2>'
 	  html+='<div id="'+i+'-wrapper"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
-	  html+='<table width="100%">';
-	  html+="<tr><td>";
-	  html+="</td><td>";
 	 } else if ( item.type === "markdown" ) {
 		 html+="</td></tr>";
-		 html+="</table>";
+   html+='<tr><td colspan=2>'
 		 html+='<div id="'+i+'-wrapper" class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
-		 html+='<table width="100%">';
-		 html+="<tr><td>";
-		 html+="</td><td>";
 	 } else if ( item.type === "date" ) {
  		html+='<input name="'+n+'" id="'+i+'" type="date" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
 		 html+= item.range ? ( (defined(item.range.min)?(' min="'+item.range.min+'"'):'') + (defined(item.range.max)?(' max="'+item.range.max+'"'):'') + (defined(item.range.step)?(' step="'+item.range.step+'"'):'') + (defined(item.list)?(' list="'+i+'-datalist"'):'') ) : '';
@@ -542,19 +546,18 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 	 } else if ( item.type === "toggle" ) {
 		 html+='<input type="checkbox" id="'+i+'" name="'+i+'" value="'+i+'"'+(istrue(v)?" checked":'')+'>';
 	 } else if ( item.type === "extendable" || item.type === "extend" ) {
-   var p=pfPrototypes.length;
-   pfPrototypes[p]=item;
-   var outer=prefix+"-extend-"+i;
-   var add=(item.add?item.add:faicon("fa-add"));
+   var p=pfPrototypes[property].length;
+   pfPrototypes[property][p]=item;
+   var outer=i;
+   var add=(item.add?item.add:faicon("fa-plus"));
    var addcss=(item.addcss?item.addcss:"form-extendable-add");
-   html+=div(
+   html+='</td><td></td></tr><tr><td colspan=2>'+div(
     hrefbtn(add,"packFormExtendAdd('"+prefix+"','"+outer+"')",addcss,outer+"-addbtn"),
-    null, outer, null, [
+    item.css?item.css:"", outer, null, null, [
        {name:"pf-extendable",value:item.name},
        {name:"pf-prototype",value:p},
        {name:"pf-extendable-id",value:i},
        {name:"pf-counter",value:0},
-       {name:"pf-wrapper",value:wrapper},
        {name:"pf-outer",value:outer},
        {name:"pf-prefix",value:prefix}
     ]
@@ -583,39 +586,54 @@ function packFormExtendClose( outer, itemNumber, closeFirst=false ) {
 }
 
 function packFormExtendAdd( prefix, outer ) {
+ var property=prefix.replaceAll("-","");
+// console.log(pfPrototypes[property]);
+// console.log(outer);
  var wrapper=Get(outer);
  var counter=parseInt($(wrapper).attr("pf-counter"));
  var prototype=parseInt($(wrapper).attr("pf-prototype"));
- var item=pfPrototypes[prefix][prototype];
+// console.log("Prototype: "+prototype);
+ var item=pfPrototypes[property][prototype];
  var closebtn="";
  var makeCloseButton=false;
  var disableAddButton=false;
- if ( !undefined(item.limit) ) {
+ if ( defined(item.limit) ) {
   if ( item.limit != 0 ) {
    if ( item.limit <= counter ) makeCloseButton=true;
    if ( item.limit >= counter ) disableAddButton=true;
-  }
+  } else makeCloseButton = true;
+ } else makeCloseButton = true;
+ if ( defined(item.minimum) ) {
+  if ( counter < item.minimum ) makeCloseButton=false;
+  else makeCloseButton=true;
  }
- if ( counter > item.minimum ) makeCloseButton=true;
  counter++;
  var inner=outer+"-inner-"+counter;
  if ( makeCloseButton ) {
   var close=(item.close?item.close:faicon("fa-close"));
   var closecss=(item.closecss?item.closecss:"form-extendable-close");
-  closebtn=hrefbtn(close,"packFormExtendClose('"+outer+"',"+counter+","+(item.closefirst?"true":"false")+")",closecss);
+  closebtn=div(hrefbtn(close,"packFormExtendClose('"+outer+"',"+counter+","+(item.closefirst?"true":"false")+")",closecss),null,outer+"-closer");
  }
  var html=div(
-  div( PackForm( item.model, inner, true )+closebtn,
-   null,wrapper,null,null,[
+  (item.closebefore === true ? closebtn : "")
+  +(item.title?item.title.replaceAll("###",counter):"")
+  +div( PackForm( item.model, inner, true ),
+   null,inner,null,null,[
     {name:"pf-prototype",value:prototype},
     {name:"pf-number",value:counter},
-    {name:"pf-outer",value:outer},
+    {name:"pf-outer",value:outer}
    ]
-  ),
-  null,inner
+  )
+  +(item.closebefore === true ? "" : closebtn),
+  (item.inner ? item.inner : ""),inner
  );
  $(wrapper).attr("pf-counter",counter);
- $(Get(wrapper)).append(div(html,null,inner));
+ $(wrapper).append(html);
+ var addbtn=Get(outer+"-addbtn");
+ addbtn.parentNode.removeChild(addbtn);
+ var add=(item.add?item.add:faicon("fa-plus"));
+ var addcss=(item.addcss?item.addcss:"form-extendable-add");
+ $(wrapper).append( hrefbtn(add,"packFormExtendAdd('"+prefix+"','"+outer+"')",addcss,outer+"-addbtn") );
  jQueryForm( item.model, inner );
 }
 
@@ -719,172 +737,172 @@ function revealByValue( ele ) {
 // call to bind functions in jquery after packing the form and spewing it
 function jQueryForm( model, prefix="jsapp-model" ) {
  model.forEach(function(item,index){
-	  item.prefix=prefix;
+   item.prefix=prefix;
 	  var n = (item.name?item.name:index);
 	  var i = prefix+'-'+slugify(n);
 	  var v = (item.value?item.value:"");
 	  var p = (item.hint?item.hint:"");
-	  var ele=Get(i);
-   if ( !ele ) { console.log("Warning: no valid element found by id "+i); }
-	  ele.formitem=item;
-	  if ( item.hide ) $("#"+i).hide();
-	  if ( item.hover ) $("#"+i).hover(item.hover.enter,item.hover.leave);
-	  if ( item.click ) $("#"+i).click(item.click);
-	  if ( item.scroll ) $("#"+i).scroll(item.scroll);
-	  if ( item.toggle ) $("#"+i).toggle(item.toggle.even,item.toggle.odd);
-	  if ( item.select ) $("#"+i).select(item.select);
-	  if ( item.resize ) $("#"+i).resize(item.resize);
-	  if ( item.blur ) $("#"+i).blur(item.blur);
-	  if ( item.load ) $("#"+i).load(item.load);
-	  if ( item.unload ) $("#"+i).contextmenu(item.unload);
-	  if ( item.input ) $("#"+i).input(item.input);
-	  if ( item.menu ) $("#"+i).contextmenu(item.menu);
-	  if ( item.focus ) $("#"+i).focus(item.focus);
-	  if ( item.focusin ) $("#"+i).focusin(item.focusin);
-	  if ( item.focusout ) $("#"+i).focusout(item.focusout);
-	  if ( item.submit ) $("#"+i).submit(item.submit);
-	  if ( item.mousemove ) $("#"+i).mousemove(item.mousemove);
-	  if ( item.mouseenter ) $("#"+i).mouseenter(item.mouseenter);
-	  if ( item.mouseleave ) $("#"+i).mouseleave(item.mouseleave);
-	  if ( item.mouseover ) $("#"+i).mouseover(item.mouseover);
-	  if ( item.mouseout ) $("#"+i).mouseout(item.mouseout);
-	  if ( item.mousedown ) $("#"+i).mousedown(item.mousedown);
-	  if ( item.mouseup ) $("#"+i).mouseup(item.mouseup);
-	  if ( item.keyup ) $("#"+i).keyup(item.keyup);
-	  if ( item.keydown ) $("#"+i).keydown(item.keydown);
-	  if ( item.keypress ) $("#"+i).keypress(item.keypress);
-	  if ( item.change ) $("#"+i).change(item.change);
-	  // "on"	 
-	  if ( item.onmousemove ) $("#"+i).mousemove(item.onmousemove);
-	  if ( item.onmouseenter ) $("#"+i).mouseenter(item.onmouseenter);
-	  if ( item.onmouseleave ) $("#"+i).mouseleave(item.onmouseleave);
-	  if ( item.onmouseover ) $("#"+i).mouseover(item.onmouseover);
-	  if ( item.onmouseout ) $("#"+i).mouseout(item.onmouseout);
-	  if ( item.onmousedown ) $("#"+i).mousedown(item.onmousedown);
-	  if ( item.onmouseup ) $("#"+i).mouseup(item.onmouseup);
-	  if ( item.onkeydown ) $("#"+i).keydown(item.onkeydown);
-	  if ( item.onkeypress ) $("#"+i).keypress(item.onkeypress);
-	  if ( item.onkeyup ) $("#"+i).keyup(item.onkeyup);
-	  if ( item.onchange ) $("#"+i).change(item.onchange);
-	  if ( item.oninput ) $("#"+i).input(item.oninput);
-	  if ( item.contextmenu ) $("#"+i).contextmenu(item.contextmenu);
-	  if ( item.type === "markdown" ) {
-		  item.live=woofmark(Get(i),{
-     parseMarkdown: function (input) {
-      return megamark(input, {
-       tokenizers: [{
-        token: /(^|\s)@([A-z]+)\b/g,
-        transform: function (all, separator, id) { return separator + '<a href="/users/' + id + '">@' + id + '</a>'; }
-       }]
-      });
-     },
-     parseHTML: function (input) {
-      return domador(input, {
-       transform: function (el) {if (el.tagName === 'A' && el.innerHTML[0] === '@') { return el.innerHTML; } }
-      });
-     },
-     fencing: true,
-     html: false,
-     wysiwyg: true,
-     defaultMode: 'wysiwyg'
-		  );
-	 }
-	 // enable,reveal expects "domid" or ["domid","domid2"...]
-	 if ( item.type == 'toggle' ) {
-   switcher(ele);
-	  if ( item.enable ) {
-	   var domlist;
-	   if ( is_array(item.enable) ) domlist=item.enable;
-	   else { domlist=[]; domlist[0]=item.enable; }
-	   var ele=Get(i);
-	   for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
-	   ele.domlist=domlist;
-	   $(ele).toggle(
-	    function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);}},
-	    function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}}
-	   );
-		  $(ele).click(function(e){
-			  console.log(this);
-			  if ( ($(this).is(":checked") || isChecked(this)) ) {
-			 	for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);} 
-			 	if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
-			  } else {
-			 	for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}
-			 	if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
-			  }			 
-  	 });		 
-	   if ( istrue(item.value) ) {
-	  	 for(var k=0;k<domlist.length;k++){Get(domlist[k]).setAttribute("disabled",true);}
-	   } else {
-			  for(var k=0;k<domlist.length;k++){Get(domlist[k]).prop("disabled",true);Get('#'+domlist[k]).removeAttr("disabled");}
-		  }
-	  }
-	  if ( item.reveal ) {
-	   var domlist;
-	   if ( is_array(item.reveal) ) domlist=item.reveal;
-	   else { domlist=[]; domlist[0]=item.reveal; }
-		  console.log(domlist);
-	   var ele=Get(i);
-	   for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
-	   ele.domlist=domlist;
-	   $(ele).toggle(
-	   	function(e){console.log("even");for(var m=0;m<this.domlist.length;m++){$(this.domlist[m]).show();} if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); },
-	    function(e){console.log("odd"); for(var m=0;m<this.domlist.length;m++){$(this.domlist[m]).hide();} if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); }
-	   );
-		  $(ele).click(function(e){
-			  if ( ($(this).is(":checked") || isChecked(this)) ) {
-			 	for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).show();} 
-			 	if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
-			  } else {
-			 	for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).hide();}
-			 	if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
-			  }			 
-		  });
-	   if ( istrue(item.value) ) {
-			  for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).show();}
-	   } else {
-			  for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).hide();}
-		  }
-	  }
-	 }
-	 // enable or reveal appear inside the options list
-	 // enable,reveal expects [] of { value:"triggervalue", elements: "domid" or ["domid","domid"] }
-	 if ( item.type == 'radio' ) {
-	  if ( item.enable ) {
-    for ( var k=0; k<item.options.length; k++ ) {
-	    var opt_i = k+'-'+num;
-	    var opt_ele=Get(opt_i);
-	    opt_ele.formitem=item;
-	    $(opt_ele).change( function(e){ enableByValue(this); } );
-	    if ( $(opt_ele).is(':checked') ) enableByValue(opt_ele);
-	 	 }
-	  }
-	  if ( item.reveal ) {
-    for ( var i=0; k<item.options.length; k++ ) {
-		   var opt_i = k+'-'+num;
-		   var opt_ele=Get(opt_i);
-		   opt_ele.formitem=item;
-	    $(opt_ele).change( function(e){ revealByValue(this); } );
-		   if ( $(opt_ele).is(':checked') ) revealByValue(opt_ele);
-		  }
-	  }
-	 }
-	 // enable or reveal appear inside the options list
-	 // enable,reveal expects [] of { value:"triggervalue", elements: "domid" or ["domid","domid"] }
-	 if ( item.type == 'select' ) {
-   if ( item.enable ) for ( var k=0; k<item.options.length; k++ ) $(ele).change( function(e){ enableByValue(this); } );
-   if ( item.reveal ) for ( var k=0; k<item.options.length; k++ ) $(ele).change( function(e){ revealByValue(this); } );
-   $(ele).trigger('change');
-	 }
-  // extendable
-  if ( item.type == 'extend' || item.type == 'extendable' ) {
-   if ( defined(item.initial) && item.initial > 0 ) {
-    var outer=prefix+"-extend-"+i;
-    for ( var x=0; x<item.initial; x++ ) $(Get(outer+"-addbtn")).trigger('click');
+   // extendable
+   if ( item.type === 'extend' || item.type === 'extendable' ) {
+    if ( defined(item.initial) && item.initial > 0 ) {
+     var outer=i;
+     for ( var x=0; x<item.initial; x++ ) { packFormExtendAdd(prefix,outer); }
+    }
+   } else {
+    var ele=Get(i);
+    if ( !ele ) { console.log("Warning: no valid element found by id "+i+" (index: "+index+")"); console.log(item); }
+    ele.formitem=item;
+    if ( item.hide ) $("#"+i).hide();
+    if ( item.hover ) $("#"+i).hover(item.hover.enter,item.hover.leave);
+    if ( item.click ) $("#"+i).click(item.click);
+    if ( item.scroll ) $("#"+i).scroll(item.scroll);
+    if ( item.toggle ) $("#"+i).toggle(item.toggle.even,item.toggle.odd);
+    if ( item.select ) $("#"+i).select(item.select);
+    if ( item.resize ) $("#"+i).resize(item.resize);
+    if ( item.blur ) $("#"+i).blur(item.blur);
+    if ( item.load ) $("#"+i).load(item.load);
+    if ( item.unload ) $("#"+i).contextmenu(item.unload);
+    if ( item.input ) $("#"+i).input(item.input);
+    if ( item.menu ) $("#"+i).contextmenu(item.menu);
+    if ( item.focus ) $("#"+i).focus(item.focus);
+    if ( item.focusin ) $("#"+i).focusin(item.focusin);
+    if ( item.focusout ) $("#"+i).focusout(item.focusout);
+    if ( item.submit ) $("#"+i).submit(item.submit);
+    if ( item.mousemove ) $("#"+i).mousemove(item.mousemove);
+    if ( item.mouseenter ) $("#"+i).mouseenter(item.mouseenter);
+    if ( item.mouseleave ) $("#"+i).mouseleave(item.mouseleave);
+    if ( item.mouseover ) $("#"+i).mouseover(item.mouseover);
+    if ( item.mouseout ) $("#"+i).mouseout(item.mouseout);
+    if ( item.mousedown ) $("#"+i).mousedown(item.mousedown);
+    if ( item.mouseup ) $("#"+i).mouseup(item.mouseup);
+    if ( item.keyup ) $("#"+i).keyup(item.keyup);
+    if ( item.keydown ) $("#"+i).keydown(item.keydown);
+    if ( item.keypress ) $("#"+i).keypress(item.keypress);
+    if ( item.change ) $("#"+i).change(item.change);
+    // "on"	 
+    if ( item.onmousemove ) $("#"+i).mousemove(item.onmousemove);
+    if ( item.onmouseenter ) $("#"+i).mouseenter(item.onmouseenter);
+    if ( item.onmouseleave ) $("#"+i).mouseleave(item.onmouseleave);
+    if ( item.onmouseover ) $("#"+i).mouseover(item.onmouseover);
+    if ( item.onmouseout ) $("#"+i).mouseout(item.onmouseout);
+    if ( item.onmousedown ) $("#"+i).mousedown(item.onmousedown);
+    if ( item.onmouseup ) $("#"+i).mouseup(item.onmouseup);
+    if ( item.onkeydown ) $("#"+i).keydown(item.onkeydown);
+    if ( item.onkeypress ) $("#"+i).keypress(item.onkeypress);
+    if ( item.onkeyup ) $("#"+i).keyup(item.onkeyup);
+    if ( item.onchange ) $("#"+i).change(item.onchange);
+    if ( item.oninput ) $("#"+i).input(item.oninput);
+    if ( item.contextmenu ) $("#"+i).contextmenu(item.contextmenu);
+    if ( item.type === "markdown" ) {
+     item.live=woofmark(Get(i),{
+      parseMarkdown: function (input) {
+       return megamark(input, {
+        tokenizers: [{
+         token: /(^|\s)@([A-z]+)\b/g,
+         transform: function (all, separator, id) { return separator + '<a href="/users/' + id + '">@' + id + '</a>'; }
+        }]
+       });
+      },
+      parseHTML: function (input) {
+       return domador(input, {
+        transform: function (el) {if (el.tagName === 'A' && el.innerHTML[0] === '@') { return el.innerHTML; } }
+       });
+      },
+      fencing: true,
+      html: false,
+      wysiwyg: true,
+      defaultMode: 'wysiwyg'
+     });
+   }
+   // enable,reveal expects "domid" or ["domid","domid2"...]
+   if ( item.type == 'toggle' ) {
+//    switcher(ele);
+    if ( item.enable ) {
+     var domlist;
+     if ( is_array(item.enable) ) domlist=item.enable;
+     else { domlist=[]; domlist[0]=item.enable; }
+     var ele=Get(i);
+     for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
+     ele.domlist=domlist;
+     $(ele).toggle(
+      function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);}},
+      function(e){for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}}
+     );
+     $(ele).click(function(e){
+   	  console.log(this);
+   	  if ( ($(this).is(":checked") || isChecked(this)) ) {
+   	 	for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).setAttribute("disabled",true);} 
+   	 	if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
+   	  } else {
+   	 	for(var i=0;i<this.domlist.length;i++){$('#'+this.domlist[i]).prop("disabled",true);$(this.domlist[i]).removeAttr("disabled");}
+   	 	if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
+   	  }			 
+   	 });		 
+     if ( istrue(item.value) ) {
+    	 for(var k=0;k<domlist.length;k++){Get(domlist[k]).setAttribute("disabled",true);}
+     } else {
+   	  for(var k=0;k<domlist.length;k++){Get(domlist[k]).prop("disabled",true);Get('#'+domlist[k]).removeAttr("disabled");}
+     }
+    }
+    if ( item.reveal ) {
+     var domlist;
+     if ( is_array(item.reveal) ) domlist=item.reveal;
+     else { domlist=[]; domlist[0]=item.reveal; }
+     console.log(domlist);
+     var ele=Get(i);
+     for(var k=0;k<domlist.length;k++) domlist[k]=prefix+'-'+slugify(domlist[k]);
+     ele.domlist=domlist;
+     $(ele).toggle(
+     	function(e){console.log("even");for(var m=0;m<this.domlist.length;m++){$(this.domlist[m]).show();} if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); },
+      function(e){console.log("odd"); for(var m=0;m<this.domlist.length;m++){$(this.domlist[m]).hide();} if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); }
+     );
+     $(ele).click(function(e){
+   	  if ( ($(this).is(":checked") || isChecked(this)) ) {
+   	 	for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).show();} 
+   	 	if (this.formitem.toggle && this.formitem.toggle.even) this.formitem.toggle.even(); 
+   	  } else {
+   	 	for(var k=0;k<this.domlist.length;k++){$(Get(this.domlist[k]+'-wrapper')).hide();}
+   	 	if (this.formitem.toggle && this.formitem.toggle.odd) this.formitem.toggle.odd(); 
+   	  }			 
+     });
+     if ( istrue(item.value) ) {
+   	  for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).show();}
+     } else {
+   	  for(var k=0;k<domlist.length;k++){$(Get(domlist[k]+'-wrapper')).hide();}
+     }
+    }
+   }
+   // enable or reveal appear inside the options list
+   // enable,reveal expects [] of { value:"triggervalue", elements: "domid" or ["domid","domid"] }
+   if ( item.type == 'radio' ) {
+    if ( item.enable ) {
+     for ( var k=0; k<item.options.length; k++ ) {
+      var opt_i = k+'-'+num;
+      var opt_ele=Get(opt_i);
+      opt_ele.formitem=item;
+      $(opt_ele).change( function(e){ enableByValue(this); } );
+      if ( $(opt_ele).is(':checked') ) enableByValue(opt_ele);
+   	 }
+    }
+    if ( item.reveal ) {
+     for ( var i=0; k<item.options.length; k++ ) {
+      var opt_i = k+'-'+num;
+      var opt_ele=Get(opt_i);
+      opt_ele.formitem=item;
+      $(opt_ele).change( function(e){ revealByValue(this); } );
+      if ( $(opt_ele).is(':checked') ) revealByValue(opt_ele);
+     }
+    }
+   }
+   // enable or reveal appear inside the options list
+   // enable,reveal expects [] of { value:"triggervalue", elements: "domid" or ["domid","domid"] }
+   if ( item.type == 'select' ) {
+    if ( item.enable ) for ( var k=0; k<item.options.length; k++ ) $(ele).change( function(e){ enableByValue(this); } );
+    if ( item.reveal ) for ( var k=0; k<item.options.length; k++ ) $(ele).change( function(e){ revealByValue(this); } );
+    $(ele).trigger('change');
    }
   }
  });
- return html;
 }
 
 function FormErr(item,model,prefix) {
@@ -917,6 +935,7 @@ function UnpackForm( model, prefix="jsapp-model" ) {
    var outer=prefix+"-extend-"+index;
    var wrapper=Get(outer);
    var inners=$(wrapper).children("div");
+   console.log(inners);
    inners.forEach(function(e){
     var pre=$(e).attr("id");
     unpacked[unpacked.length]=UnpackForm(item.model,pre);

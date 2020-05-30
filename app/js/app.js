@@ -33,6 +33,12 @@ class MicertifyApp {
   this.charts = [];
   this.save_user_data = false;
   this.last_color_picked = tinycolor("hotPink");
+  this.current= {
+   test: 0,
+   program: 0,
+   questions: 0,
+   page: 0
+  };
   app=this;
  }
  
