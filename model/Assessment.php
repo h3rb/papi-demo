@@ -93,13 +93,19 @@ abstract class AssessmentPassMode extends Enum {
      $mp = new Program($database);
      $p = $mp->Get($o['r_Program']);
      $mq = new AssessmentQuestion($database);
-     $q = $mp->Select(array("r_Assessment"=>$id));
+     $q = $mq->Select(array("r_Assessment"=>$o['ID']));
+     $ma = new AssessmentAnswer($database);
      $res=array(
       "test"=>API::UnmapValues( $o, Assessment::JSONMap()),
       "program"=>API::UnmapValues( $p, Program::JSONMap()),
-      "questions"=>API::UnmapValuesSet( $q, AssessmentQuestion::JsonMap())
      );
-     API::Success($res);
+     $questions=API::UnmapValuesSet( $q, AssessmentQuestion::JSONMap() );
+     foreach ( $questions as &$question ) {
+      $answers=$ma->Select(array("r_AssessmentQuestion"=>$question['id']));
+      $question['answers']=API::UnmapValuesSet( $answers, AssessmentAnswer::JSONMap() );
+     }
+     $res["test"]["questions"]=$questions;
+     API::Success("Test retrieved.",$res);
    }
    else API::Failure("Not owner.",ERR_NOT_OWNER);
   }

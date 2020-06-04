@@ -28,13 +28,14 @@ const Views_Tests = {
  },
  
  drawEditAssessment: function( test_id ) {
+  app.SaveState("drawEditAssessment",test_id);
 	 app.DrawLoader( "Assessment", "Create &amp; Edit", null ); 
 	 console.log("drawEditAssessment:"+test_id);
 	 app.api.Get( "test", test_id, function(outgoing,incoming,ajax) {
 		console.log(incoming);
 		var test=incoming.data.test;
 		var program=incoming.data.program;
-		var questions=incoming.data.questions;
+		var questions=test.questions;
   app.current.test=test;
   app.current.program=program;
   app.current.questions=questions;
@@ -42,7 +43,7 @@ const Views_Tests = {
 		var subtitle="Create &amp; Edit";
   $("#mcapp-header-title").html( title+"<small>"+subtitle+"</small>");
 		$("#mcapp-content-box-title").html( div(
-    hrefbtn(button(faicon("fa-plus-circle")+" Add Question",null,"btn"),"mcapp.drawAddQuestion('+test.id+');"),
+    hrefbtn(button(faicon("fa-plus-circle")+" Add Question",null,"btn"),"mcapp.drawAddQuestion("+test.id+");"),
     "pull-right"
    )
   );
@@ -58,6 +59,13 @@ const Views_Tests = {
 		 Warn("Error loading test!");
 		 app.doPrograms();
 	 });
- }
+ },
  
+ GetTestByID: function(id) {
+   if ( is_string(id) ) id=parseInt(id);
+   for ( var i=0; i<app.programs.length; i++ ) {
+	   if ( app.tests[i].id == id ) return app.tests[i];
+   }
+   return null;
+ }
 };

@@ -330,6 +330,17 @@ class MicertifyAPI {
 		);	
 	}
 	
+	CreateMember( t, member, input, onSuccess ) {
+		var data={ action : "create", subject : t, for: member, data: input };
+		api.Request( data,
+		 function(e) {
+			if ( api.Successful(e) ) {
+				onSuccess(this.wasData, e, this);
+			}
+		 }
+		);	
+	}
+	
 	Get( t, id, onSuccess, onFailure=api.DefaultError ) {
 		var data={ action: "get", subject: t, for: id };
 		api.Request( data,

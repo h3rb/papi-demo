@@ -4,6 +4,55 @@
 
 .logo-trademark { color:black; font-size:50%; vertical-align:super; }
 
+
+.round2 { border-radius: 2px; }
+.round3 { border-radius: 3px; }
+.round4 { border-radius: 4px; }
+.round5 { border-radius: 5px; }
+.round6 { border-radius: 6px; }
+.round7 { border-radius: 7px; }
+.round8 { border-radius: 8px; }
+.round9 { border-radius: 9px; }
+.round10 { border-radius: 10px; }
+.round11 { border-radius: 11px; }
+.round12 { border-radius: 12px; }
+.round13 { border-radius: 13px; }
+.round14 { border-radius: 14px; }
+.round15 { border-radius: 15px; }
+.round16 { border-radius: 16px; }
+
+.pad0 { padding:0px; }     .marg0 { margin:0px; }
+.pad1 { padding:1px; }     .marg1 { margin:1px; }
+.pad2 { padding:2px; }     .marg2 { margin:2px; }
+.pad3 { padding:3px; }     .marg3 { margin:3px; }
+.pad4 { padding:4px; }     .marg4 { margin:4px; }
+.pad5 { padding:5px; }     .marg5 { margin:5px; }
+.pad6 { padding:6px; }     .marg6 { margin:6px; }
+.pad7 { padding:7px; }     .marg7 { margin:7px; }
+.pad8 { padding:8px; }     .marg8 { margin:8px; }
+.pad9 { padding:9px; }     .marg9 { margin:9px; }
+.pad10 { padding:10px; }   .marg10 { margin:10px; }
+.pad11 { padding:11px; }   .marg11 { margin:11px; }
+.pad12 { padding:12px; }   .marg12 { margin:12px; }
+
+.pad24 { padding:2px 4px; }
+.pad26 { padding:2px 6px; }
+.pad06 { padding: 0px 6px; }
+.pad012 { padding: 0px 12px; }
+
+.padtop3 { padding-top: 3px; }
+.margtop3 { margin-top: 3px; }
+.padtop4 { padding-top: 4px; }
+.margtop4 { margin-top: 4px; }
+
+.nomargin { margin: none; }
+.nopadding { padding: none; }
+
+.bartitle { background: #DDD; font-weight: bolder; color: #000; }
+
+.white-text { color:white; }
+.gray-text { color:gray; }
+
 .center-div { margin: 0 auto; width: 100px; }
 
 .center-div p {
@@ -71,13 +120,91 @@
 }
 
 
-
 .bottom-right {
   background-color:white;
-  border-radius: 8px;
+  border: 1px solid gray;
+  border-right: none;
+  border-radius: 8px 8px 0 8px;
   position: fixed;
   padding: 16px;
   right: 0;
   bottom: 0;
   width: auto;
+  z-index: 1000001;
 }
+
+
+.topround {
+ border: 1px solid black;
+ border-bottom: none;
+ padding: 4px;
+ margin: 2px;
+ border-radius: 10px 10px 0 0;
+}
+
+.smallcaps {
+ font-variant:small-caps;
+ font-size: 10px;
+ font-weight:normal;
+}
+
+.lite-gray {
+  background: #DDD;
+}
+
+.thinline { border: 1px solid gray; }
+
+/* Help Tips (popup help) */
+
+.help-tip{
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    text-align: center;
+    background-color: #BCDBEA;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    line-height: 26px;
+    cursor: default;
+}
+/* Minified helpers. */
+.help-tip:before{content:'?';font-weight:700;color:#fff}
+.help-tip:hover p{display:block;transform-origin:100% 0;-webkit-animation:fadeIn .3s ease-in-out;animation:fadeIn .3s ease-in-out}
+.help-tip p{display:none;text-align:left;background-color:#1e2021;padding:20px;width:300px;position:absolute;border-radius:3px;box-shadow:1px 1px 1px rgba(0,0,0,.2);right:-4px;color:#fff;font-size:13px;line-height:1.4}
+.help-tip p:before{position:absolute;content:'';width:0;height:0;border:6px solid transparent;border-bottom-color:#1e2021;right:10px;top:-12px}
+.help-tip p:after{width:100%;height:40px;content:'';position:absolute;top:-40px;left:0}
+@-webkit-keyframes fadeIn{0%{opacity:0;transform:scale(.6)}100%{opacity:100%;transform:scale(1)}}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:100%}}
+
+/* Help Tips (popup help) */
+
+.error-tip{
+    top: 18px;
+    right: 18px;
+    text-align: center;
+    background-color: #BC0000;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    line-height: 26px;
+    cursor: default;
+}
+/* Minified helpers. */
+.error-tip:before{content:'!';font-weight:700;color:gold}
+.error-tip:hover p{display:block;transform-origin:100% 0;-webkit-animation:fadeIn .3s ease-in-out;animation:fadeIn .3s ease-in-out}
+.error-tip p{
+  -webkit-user-select: all; 
+  -moz-user-select: all;    
+  -ms-user-select: all;     
+  user-select: all;          display:none;text-align:left;background-color:#123;position:absolute;padding:20px;width:auto;border-radius:3px;
+box-shadow:1px 1px 1px rgba(0,0,0,.2);right:-4px;color:#fff;font-size:13px;line-height:1.4}
+.error-tip p:before{content:'';width:0;height:0;border:6px solid transparent;border-bottom-color:#1e2021;right:10px;top:-12px}
+.error-tip p:after{width:100%;height:40px;content:'';position:absolute;top:-40px;left:0}
+@-webkit-keyframes fadeIn{0%{opacity:0;transform:scale(.6)}100%{opacity:100%;transform:scale(1)}}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:100%}}
+
+/* End of Help Tips */
+

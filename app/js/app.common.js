@@ -136,6 +136,7 @@ function numToLetter( n ) {
 function isString(x) {
   return Object.prototype.toString.call(x) === "[object String]"
 }
+function is_string(x) { return isString(x); }
 
 function istrue(v) {
 	var b=isString(b)?v.toLowerCase():v;
@@ -162,6 +163,7 @@ function isfalse(v) {
 function isBoolean(obj) {
    return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
 }
+function is_bool(obj) { return isBoolean(obj); }
 
 // php brainfarts
 
@@ -322,6 +324,16 @@ function GetInputValue(id) {
 	return $(a).val();
 }
 
+function Tooltip( domid, content, direction="top" ) {
+ var dom=Get(domid);
+ if ( !defined(dom) || !dom ) return false;
+ $(dom).attr("data-toggle","tooltip");
+ $(dom).attr("data-placement",direction);
+ $(dom).attr("title",content);
+ $(dom).tooltip();
+ return true;
+}
+
 // returns the browser's page visibility property
 function PageVisibilityProp(){
     var prefixes = ['webkit','moz','ms','o'];    
@@ -409,17 +421,40 @@ function slugify(s) {
  *
  * Other parameters:
  * name    (unqiue) property.name, used to create id
- * css     css class list
- * style   style to add to tag
- * list    used to do autocomplete for limited value scenarios (integer, money, decimal, number, string)
- * text    used to populate the interior of an html element type
- * label   labels an area, button, or input
+ * css      css class list applied to input area
+ * style    style to add to tag
+ * list     used to do autocomplete for limited value scenarios (integer, money, decimal, number, string)
+ * text     used to populate the interior of an html element type
+ * label    labels an area, button, or input
+ * labelcss css class list added to label wrapper div
+ * caption  for textarea, text and other input types onlye:
+ *        (optional) this shows <small> (or user-defined) caption near label,
+ *                   if object is provided, must be of the form:
+ *                      {
+ *                       where: "label", "afterlabel" (default), "after" or "before" (on input tag),
+ *                       html: <content>,
+ *                       tag: "small" (default) (or false for none, so no wrapper tag will be used),
+ *                       css: (optional) adds a class to the tag,
+ *                       style: (optional) adds specific style to the tag
+ *                      }
  * range  (optional) for numeric data entry (types integer, decimal, money, date),
- *         object that must contain the format { min: # (optional), max: # (optional) }
+ *          object that must contain the format { min: # (optional), max: # (optional) }
  * autofocus To enable autofocus feature (true/false)
- * multiple To enable multiple selections (true/false)
- * disabled To disable (true/false)
- * currency For "money" element types, if not present defaults to USD
+ * multiple  To enable multiple selections (true/false)
+ * disabled  To disable (true/false)
+ * currency  For "money" element types, if not present defaults to USD
+ * tip       activates a tooltip, provide text/html for content,
+ *           if an object is provided, expects the format { direction: (default to "bottom"), html: <content> }
+ * wrapper   Used for certain input types to define a tag wrapper
+ * after     Appended to input type
+ * switch   for 'toggle', adds a span tag to allow for a slider toggle, provide css class or defaults to "slider"
+ *
+ * Event parameters for further customization (expects jquery function(e){..}):
+ * hide, hover, click, scroll, toggle, select, resize, blur, load, unload, menu, focus, focusin, focusout,
+ * submit, contextmenu,
+ * input, change, mousemove, mouseenter, mouseleave, mouseover, mouseout, mousedown, mouseup, keyup, keydown, keypress,
+ * (or) onmousemove, onmouseenter, onmouseleave, onmouseover, onmouseout, onmousedown, onmouseup,
+ * onkeydown, onkeypress, onkeyup, onchange, oninput
  * 
  * Parameters only for 'extendable':
  * model    recursion (use with extendable)
@@ -434,9 +469,10 @@ function slugify(s) {
  * minimum  a number that must be less than limit, describing a minimum number of entries
  * title    A title for each section, where ### is replaced with the number of the extension
  * inner    describes the CSS class list to applied to each extendable form copy
+ * before   html inserted before the extendable, a section title for example
  */
 
-var html="";
+var html="",prehtml="",posthtml="",afterlabel="", inlabel="";
 var pfPrototypes={};
 function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
  var property=prefix.replaceAll("-","");
@@ -444,13 +480,36 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
  html="";
  html='<table width="100%">';
  model.forEach(function(item,index) {
+  inlabel="";
+  afterlabel="";
+  prehtml="";
+  posthtml="";
 	 var n = (item.name?item.name:index);
 	 var i = prefix+'-'+slugify(n);
-	 var v = (item.value?item.value:"");
+	 var v = (defined(item.value)?item.value:"");
 	 var p = (item.hint?item.hint:"");
-	 if ( item.type == "markdown" || item.type == "text" ) html+='<tr><td>';
+	 if ( item.type === "markdown" || item.type === "text" ) html+='<tr><td>';
 	 else html+='<tr id="'+i+'-wrapper"><td>';
-	 if ( item.label ) html+='<label for="'+n+'">'+item.label+'</label>';
+  if ( defined(item.caption) ) {
+   var content="",where="after",tag="small";
+   if ( is_string(item.caption) ) {
+    content=item.caption;
+   } else if ( defined(item.caption.html) ) {
+    content=item.caption.html;
+    if ( defined(item.caption.where) ) where=item.caption.where;
+    if ( defined(item.caption.tag) ) tag=item.caption.tag;
+   }
+   var caption=div((tag?('<'+tag+(defined(item.caption.css)?' class="'+item.caption.css+'"':'')+(defined(item.caption.style)?' style="'+item.caption.style+'"':'')+'>'):'')+content+(tag?('</'+tag+'>'):''));
+   switch ( where ) {
+    case "label": inlabel+=caption; break;
+    case "afterlabel": afterlabel+=caption; break;
+    case "after": case "post": posthtml+=caption; break;
+    case "before": case "pre": prehtml+=caption; break;
+    default: afterlabel+=caption; break;
+   }
+  }
+	 if ( item.label ) html+=div('<label for="'+n+'">'+item.label+inlabel+'</label>',defined(item.labelcss)?item.labelcss:null);
+  html+=afterlabel;
 	 html+="</td><td>";
 	 if ( item.type === "p" ) {
 	 	html+='</td><td></td></tr><tr><td colspan=2><p id="'+i+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+item.text+'</p></td></tr>';
@@ -475,9 +534,11 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 	 } else if ( item.type === "hidden" ) {
  		html+='<input name="'+n+'" id="'+i+'" type="hidden" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
 	 } else if ( item.type === "string" ) {
+   html+=prehtml;
  		html+='<input name="'+n+'" id="'+i+'" type="text" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
    html+= item.list ? ('list="'+i+'-datalist" ')  : '';
    html+= '/>';
+   html+=posthtml;
 		 if ( item.list ) {
 			 html+='<datalist id="'+i+'-datalist">';
 			 for( var j=0; j<item.list.length; j++ ) {
@@ -488,16 +549,22 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 	 } else if ( item.type === "text" ) {
 	  html+="</td></tr>";
    html+='<tr><td colspan=2>'
+   html+=prehtml;
 	  html+='<div id="'+i+'-wrapper"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
+   html+=posthtml;
 	 } else if ( item.type === "markdown" ) {
 		 html+="</td></tr>";
    html+='<tr><td colspan=2>'
-		 html+='<div id="'+i+'-wrapper" class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
+   html+=prehtml;
+ 	 html+='<div id="'+i+'-wrapper" class="roundbox markdown-editor"><textarea name="'+n+'" id="'+i+'" placeholder="'+p+'" style="width:100%; resize:vertical; '+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">'+v+'</textarea></div>';
+   html+=posthtml;
 	 } else if ( item.type === "date" ) {
+   html+=prehtml;
  		html+='<input name="'+n+'" id="'+i+'" type="date" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
 		 html+= item.range ? ( (defined(item.range.min)?(' min="'+item.range.min+'"'):'') + (defined(item.range.max)?(' max="'+item.range.max+'"'):'') + (defined(item.range.step)?(' step="'+item.range.step+'"'):'') + (defined(item.list)?(' list="'+i+'-datalist"'):'') ) : '';
    html+= item.list ? ('list="'+i+'-datalist" ')  : '';   
 		 html+='/>';
+   html+=posthtml;
 		 if ( item.list ) {
 			 html+='<datalist id="'+i+'-datalist">';
 			 for( var j=0; j<item.list.length; j++ ) {
@@ -506,8 +573,11 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 			 html+='</datalist>';
 		 }   
 	 } else if ( item.type === "slider" ) {
+   html+=prehtml;
 		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'">';
+   html+=posthtml;
 	 } else if ( item.type === "integer" || item.type == "decimal" || item.type == "number" || item.type == "money" ) {
+   html+=prehtml;
 		 if ( item.type == "money" ) html+="<span><b>$</b>";
 		 html+='<input name="'+n+'" id="'+i+'" type="number" value="'+v+'" placeholder="'+p+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"';
 		 html+= item.range ? ( (defined(item.range.min)?(' min="'+item.range.min+'"'):'') + (defined(item.range.max)?(' max="'+item.range.max+'"'):'') + (defined(item.range.step)?(' step="'+item.range.step+'"'):'') + (defined(item.list)?(' list="'+i+'-datalist"'):'') ) : '';
@@ -521,16 +591,21 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 			 html+='</datalist>';
 		 }
 		 if ( item.type == "money" ) html+=(item.currency?item.currency:"USD")+" </span>";
+   html+=posthtml;
 	 } else if ( item.type === "radio" ) {
+   html+=prehtml;
 		 if ( item.title ) html+=item.title;
 		 item.options.forEach(function(opt,num){
 			 html+=(item.wrapper?'<'+item.wrapper+'>':'<div>')+'<input type="radio" name="'+i+'" id="'+i+'-'+num+'" value="'+opt.value+'" style="'+(item.style?item.style:"")+'" class="'+(item.css?item.css:"")+'"> '+opt.label+((item.wrapper?'</'+item.wrapper+'>':'</div>')+(item.after?item.after:''));
 		 });
+   html+=posthtml;
 	 } else if ( item.type === "select" ) {
+   html+=prehtml;
 		 html+='<select id="'+i+'"';
 		 html+=(item.autofocus?" autofocus":'');
 		 html+=(item.multiple?" multiple":'');
 		 html+=(item.disabled?" disabled":'');
+   html+=(item.css?' class="'+item.css+'"':'');
 		 html+=(item.size?(' size="'+item.size+'"'):'');
 		 html+='>';
 		 item.options.forEach(function(opt,num){
@@ -541,17 +616,23 @@ function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
 			 html+='>'+opt.name+'</option>';
 		 });
 		 html+='</select>';
+   html+=posthtml;
   } else if ( item.type === "color" ) {
-   html+= '<input type="color" id="'+i+'" name="'+i+'" value="'+(v.length>0?v:"#FF0000")+'">';
+   html+=prehtml;
+   html+= '<input type="color" id="'+i+'" name="'+i+'"'+(item.css?' class="'+item.css+'"':'')+' value="'+(v.length>0?v:"#FF0000")+'">';
+   html+=posthtml;
 	 } else if ( item.type === "toggle" ) {
-		 html+='<input type="checkbox" id="'+i+'" name="'+i+'" value="'+i+'"'+(istrue(v)?" checked":'')+'>';
+   html+=prehtml;
+		 html+= '<input type="checkbox" id="'+i+'" name="'+i+'"'+(item.css?' class="'+item.css+'"':'')+' value="'+i+'"'+(istrue(v)?" checked":'')+'>';
+   if ( defined(item.switch) ) html+='<span class="'+(item.switch===true?"slider":item.switch)+'"></span>';
+   html+=posthtml;
 	 } else if ( item.type === "extendable" || item.type === "extend" ) {
    var p=pfPrototypes[property].length;
    pfPrototypes[property][p]=item;
    var outer=i;
    var add=(item.add?item.add:faicon("fa-plus"));
    var addcss=(item.addcss?item.addcss:"form-extendable-add");
-   html+='</td><td></td></tr><tr><td colspan=2>'+div(
+   html+='</td><td></td></tr><tr><td colspan=2>'+(defined(item.before)?item.before:'')+div(
     hrefbtn(add,"packFormExtendAdd('"+prefix+"','"+outer+"')",addcss,outer+"-addbtn"),
     item.css?item.css:"", outer, null, null, [
        {name:"pf-extendable",value:item.name},
@@ -583,9 +664,10 @@ function packFormExtendClose( outer, itemNumber, closeFirst=false ) {
   $(e).attr("pf-number",i);
   i++;
  });
+ scrollElement(Get(outer));
 }
 
-function packFormExtendAdd( prefix, outer ) {
+function packFormExtendAdd( prefix, outer, calledDuringCreate=false ) {
  var property=prefix.replaceAll("-","");
 // console.log(pfPrototypes[property]);
 // console.log(outer);
@@ -635,6 +717,7 @@ function packFormExtendAdd( prefix, outer ) {
  var addcss=(item.addcss?item.addcss:"form-extendable-add");
  $(wrapper).append( hrefbtn(add,"packFormExtendAdd('"+prefix+"','"+outer+"')",addcss,outer+"-addbtn") );
  jQueryForm( item.model, inner );
+ if ( !calledDuringCreate ) scrollElement(Get(inner));
 }
 
 function enableByValue( ele ) {
@@ -746,12 +829,17 @@ function jQueryForm( model, prefix="jsapp-model" ) {
    if ( item.type === 'extend' || item.type === 'extendable' ) {
     if ( defined(item.initial) && item.initial > 0 ) {
      var outer=i;
-     for ( var x=0; x<item.initial; x++ ) { packFormExtendAdd(prefix,outer); }
+     for ( var x=0; x<item.initial; x++ ) { packFormExtendAdd(prefix,outer,true); }
     }
    } else {
     var ele=Get(i);
     if ( !ele ) { console.log("Warning: no valid element found by id "+i+" (index: "+index+")"); console.log(item); }
     ele.formitem=item;
+    if ( item.tip ) {
+     if ( is_string(item.tip) ) Tooltip(i,item.tip,"bottom");
+     else if ( defined(item.tip.direction) && defined(item.tip.html) ) Tooltip(i,item.tip.html,item.tip.direction);
+     else { console.log("Warning: item.tip did not have valid definition, requires {direction:'top', html:'<content>'} or 'string' for id "+i+" (index: "+index+")"); console.log(item); }
+    }
     if ( item.hide ) $("#"+i).hide();
     if ( item.hover ) $("#"+i).hover(item.hover.enter,item.hover.leave);
     if ( item.click ) $("#"+i).click(item.click);
@@ -794,6 +882,7 @@ function jQueryForm( model, prefix="jsapp-model" ) {
     if ( item.oninput ) $("#"+i).input(item.oninput);
     if ( item.contextmenu ) $("#"+i).contextmenu(item.contextmenu);
     if ( item.type === "markdown" ) {
+     console.log("woofmarking "+i);
      item.live=woofmark(Get(i),{
       parseMarkdown: function (input) {
        return megamark(input, {
@@ -816,7 +905,6 @@ function jQueryForm( model, prefix="jsapp-model" ) {
    }
    // enable,reveal expects "domid" or ["domid","domid2"...]
    if ( item.type == 'toggle' ) {
-//    switcher(ele);
     if ( item.enable ) {
      var domlist;
      if ( is_array(item.enable) ) domlist=item.enable;
@@ -921,7 +1009,7 @@ function UnpackForm( model, prefix="jsapp-model" ) {
 	 var v = ( item.type == "toggle" ) ? ($('#'+i).is(':checked')?1:0) :
              ( item.type == "markdown" ) ? (item.live.value()) :
 			 $("#"+i).val();
-  console.log(n+"("+i+")="+v);
+//  console.log(n+"("+i+")="+v);
 	 if ( item.required ) {
 		 if ( item.type == "string" && v.length < 1 ) return FormErr(item,model,prefix);
 		 else if ( item.type == "color" && v.length < 1 ) return FormErr(item,model,prefix);
@@ -932,13 +1020,11 @@ function UnpackForm( model, prefix="jsapp-model" ) {
 	 }
   if ( item.type == "extend" || item.type == "extendable" ) {
    var unpacked=[];
-   var outer=prefix+"-extend-"+index;
+   var outer=i;
    var wrapper=Get(outer);
-   var inners=$(wrapper).children("div");
-   console.log(inners);
-   inners.forEach(function(e){
-    var pre=$(e).attr("id");
-    unpacked[unpacked.length]=UnpackForm(item.model,pre);
+   var inners=$(wrapper).children().each(function(index){
+    var pre=$(this).attr("id");
+    if ( !pre.endsWith("addbtn") ) unpacked[unpacked.length]=UnpackForm(item.model,pre);
    });
    data[n]=unpacked;
   } else
@@ -950,8 +1036,8 @@ function UnpackForm( model, prefix="jsapp-model" ) {
 			data[n] = v;
 	 }
  });
- console.log("UnpackForm:data:");
- console.log(data);
+// console.log("UnpackForm:data:");
+// console.log(data);
  return data;
 }
 

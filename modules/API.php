@@ -53,7 +53,7 @@
 
   static function Failure( $reason, $errcode=-1 ) {
    http_response_code(400);
-   echo json_encode(array("result"=>"failure", "reason"=>$reason, "error"=>$errcode));
+   echo deep_json_encode(array("result"=>"failure", "reason"=>$reason, "error"=>$errcode));
    die;
   }
 
@@ -63,7 +63,7 @@
    else
    $arr=array( "result"=>$result, "message"=>$message, "data"=>$data );
    if ( strlen($message) === 0 ) unset($arr['message']);
-   echo json_encode($arr);
+   echo deep_json_encode($arr);
    die;
   }
 
@@ -80,18 +80,26 @@
    return $in;
   }
 
-  static function UnmapValues( $in, $map ) {
+  static function UnmapValues( $in, $map, $skip_json_decode=FALSE, $skip_s3json=FALSE ) {
    $final = array();
    $keys = array_keys($map);
-   $final["id"]=$in['ID'];
+   $final["id"]=intval($in['ID']);
    foreach ( $keys as $k ) {
+    if ( isset($map[$k][2]) && boolval($map[$k][2]) ) continue; // read only
     $column = $map[$k][0];
-    if ( isset($in[$column]) ) $final[$k] = $in[$column];
+    if ( isset($in[$column]) ) {
+     $type = $map[$k][1];
+     $final[$k] = $in[$column];
+     if ( $skip_json_decode === FALSE && $type == 'json' && !is_array($final[$k]) ) $final[$k]=deep_json_decode($final[$k]);
+     else if ( $type == 'user' || $type == 'integer' || $type == 'int' || $type == 'timestamp' ) $final[$k]=intval($final[$k]);
+     else if ( $type == 'decimal' ) $final[$k]=floatval($final[$k]);
+     else if ( $type == 'bool' || $type == 'boolean' ) $final[$k]=boolval($final[$k]) ? true : false;
+    }
    }
    return $final;
   }
 
-  static function MapValues( $dataName, $in, $map, $defaults ) {
+ static function MapValues( $dataName, $in, $map, $defaults ) {
    $final = $defaults;
    $keys = array_keys($map);
    foreach ( $keys as $k ) {
@@ -124,6 +132,10 @@
       } else API::Failure( "Wrong value for boolean '$k', expected a boolean value of TRUE/true, FALSE/false, 0, 1, or a string true, false, yes, no, 0, 1, y, n, t, f", ERR_BAD_BOOLEAN );
       if ( $v === 0 ) $final[$column]=0;
       else $final[$column]=1;
+     } else if ( $type == 'json' ) {
+      $final[$column] = deep_json_encode(strval($value));
+     } else if ( $type == 's3json' ) {
+      // Do nothing.  This data can only be unmapped.  It can be explicitly created with aws_s3json_* commands in S3.php module
      } else if ( $type == 'string' ) {
       $final[$column] = strval($value);
      }
@@ -180,6 +192,7 @@
   static function Create( $vars, $subject ) {
    if ( !isset($vars['data']) ) API::Failure("Create operation: No data set provided.",ERR_CREATE_SET_EMPTY);
    if ( is($subject,"test") ) Assessment::Make($vars);
+   else if ( is($subject,"qa") ) AssessmentQuestion::MakeWithAnswers($vars);
    else if ( is($subject,"q") ) AssessmentQuestion::Make($vars);
    else if ( is($subject,"a") ) AssessmentAnswer::Make($vars);
    else if ( is($subject,"program") ) Program::Make($vars);
@@ -288,13 +301,13 @@
    http_response_code(400);
    header("HTTP/1.0 400 Bad Request");
    if ( is_array($values) )
-   echo json_encode( array(
+   echo deep_json_encode( array(
      "code"=>$parse_code,
      "message"=>$log_msg,
      "values"=>$values
     )
    );
-   else echo json_encode( array(
+   else echo deep_json_encode( array(
      "code"=>$parse_code,
      "message"=>$log_msg
     )

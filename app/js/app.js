@@ -220,6 +220,8 @@ class MicertifyApp {
   setInterval(function(e){ app.Event120(); }, 120000);
   console.log(app);	 
   app.CheckSessionState();
+  
+  app.after_repopulate=function(){ app.RecallState(app.LoadState()); };
  }
  
  InitInactivityTimeout() {
@@ -312,8 +314,6 @@ class MicertifyApp {
  // Replaces elements in the sidebar with result from request.
  RepopulateFromBasicInfo( outgoing,incoming,ajax ) {
 	 console.log(incoming.data);
-  app.devices = incoming.data.devices;
-	 app.facilities = incoming.data.facilities;
 	 app.ParseIncoming();
 	 app.user = incoming.data.user;
 	 app.messages = incoming.data.messages;

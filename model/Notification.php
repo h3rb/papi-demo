@@ -6,6 +6,8 @@
   `Created` int(10) unsigned NOT NULL,
   `Owner` int(10) unsigned NOT NULL,
   PRIMARY KEY (`ID`)
+  KEY Owner (Owner)
+  KEY Created (Created)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
   */
  class Notification extends Model {

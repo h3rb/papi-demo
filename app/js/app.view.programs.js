@@ -27,11 +27,13 @@ const Views_Programs = {
  },
 
  doPrograms: function() {
+  app.SaveState("doPrograms");
 	 app.DrawLoader( "Your Programs", "&amp; Assessments", [ { css: "active", func:"mcapp.Sidebar(mcapp.codes.sidebar.programs)", icon:null, text:"Your Programs"  } ] );
 	 app.api.ListEverything("programs",app.drawPrograms);
  },
  
  GetProgramByID: function(id) {
+   if ( is_string(id) ) id=parseInt(id);
    for ( var i=0; i<app.programs.length; i++ ) {
 	   if ( app.programs[i].id == id ) return app.programs[i];
    }
@@ -63,6 +65,7 @@ const Views_Programs = {
  drawEditProgram: function( id ) {
 	 var program = app.GetProgramByID(id);
 	 if ( !program ) return;
+  app.SaveState("drawEditProgram",id);
 	 var model=[
 	 { name: "id", type:"hidden", value:id },
 	 { name: "name", label: "Name:", type:"string", value: program.name, hint: "Program Name" },
