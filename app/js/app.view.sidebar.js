@@ -19,7 +19,7 @@ const Views_Sidebar = {
  },
  
  
- Sidebar: function( c ) {
+ Sidebar: function( c, x=0 ) {
 	 var tags = [
 	 ];
 	$( "ul[id=mcapp-sidebar-menu] li" ).each(function( index ) {
@@ -35,8 +35,14 @@ const Views_Sidebar = {
 		  $("#mcapp-sidebar-messages").addClass("active");
 		 break;
 		 case this.codes.sidebar.search: // Called when enter pressed on search area, or button pressed.
-		  this.Title("Search");
-		  $("#mcapp-sidebar-search-form").addClass("active");		  
+    if ( x != 2 ) {
+ 		  this.Title("Search");
+	 	  $("#mcapp-sidebar-search-form").addClass("active");
+    } else {
+     $("#mcapp-sidebar-find-programs").addClass("active");
+     app.BrowsePrograms();
+    }
+    
 		 break;
 		 case this.codes.sidebar.browse:
 		  this.Title("Browse");

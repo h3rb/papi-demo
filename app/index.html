@@ -69,6 +69,14 @@
   <script type="text/javascript" src="js/app.view.tests.js"></script>
   <script type="text/javascript" src="js/app.view.qa.js"></script>
   <script type="text/javascript" src="js/app.view.sidebar.js"></script>
+  <script type="text/javascript" src="js/app.view.search.js"></script>
+  <script type="text/javascript" src="js/app.view.join.js"></script>
+  <script type="text/javascript" src="js/app.view.profile.js"></script>
+  <script type="text/javascript" src="js/app.view.messages.js"></script>
+  <script type="text/javascript" src="js/app.view.notifications.js"></script>
+  <script type="text/javascript" src="js/app.view.tasks.js"></script>
+  <script type="text/javascript" src="js/app.view.testing.js"></script>
+  <script type="text/javascript" src="js/app.view.certs.js"></script>
   <script type="text/javascript" src="js/app.views.js"></script>
 
   <!-- app controller -->
@@ -374,11 +382,19 @@
         <div class="input-group">
           <input type="text" name="q" class="form-control" placeholder="Search..." id="mcapp-sidebar-search-input">
           <span class="input-group-btn">
-                <button onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.search);" name="search" id="mcapp-sidebar-search-button" class="btn btn-flat"><i class="fa fa-search"></i>
+                <button onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.search,1);" name="search" id="mcapp-sidebar-search-button" class="btn btn-flat"><i class="fa fa-search"></i>
                 </button>
               </span>
         </div>
-      </form>		
+      </form>
+        <li class="treeview" id="mcapp-sidebar-find-programs">
+          <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.search,2);">
+            <i class="fa fa-search"></i> <span>Find, Discover &amp; Join</span>
+            <span class="pull-right-container" id="mcapp-sidebar-tests-count">
+              <span class="pull-right"><i class="fa fa-chevron-right"></i></span>
+            </span>
+          </a>
+        </li>
         <li class="treeview" id="mcapp-sidebar-take-tests">
           <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.sidebar.browse);">
             <i class="fa fa-edit"></i> <span>Take Tests</span>
