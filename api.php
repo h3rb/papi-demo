@@ -40,10 +40,16 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
 
  if ( isset($gp['data']) && isset($gp['data']['key']) ) API::ValidateToken($gp['data']);
  if ( false_or_null($session) ) {
-  if ( isset($gp['data']) && isset($gp['data']['login']) ) API::Credentials($gp);
+  if ( isset($gp['data']) ) {
+   if ( isset($gp['data']['login']) ) API::Credentials($gp);
+   else if ( isset($gp['data']['action']) && $gp['data']['action'] == 'password' ) {
+    API::UpdatePassword($gp);
+   }
+  }
   else
   API::Failure("Not logged in or no valid API credential. ".str_replace("\n","",print_r($gp,true)),ERR_INVALID_CREDENTIALS);
  }
+
 
  // var_dump($g); die;
 

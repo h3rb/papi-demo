@@ -19,6 +19,21 @@
    API::Failure("Password invalid.",ERR_INVALID_PASSWORD);
   }
 
+  static function UpdatePassword( $un, $pw, $newpw ) {
+   global $auth_database, $auth, $auth_model;
+   $auth_model = new Auth($auth_database);
+   $auth = $auth_model->byUsername($un);
+   if ( false_or_null($auth) ) API::Failure("No such user '$un'",ERR_USER_INVALID);
+   if ( Auth::CheckPassword($pw,$auth) ) {
+    if ( $auth_model->SetPassword($newpw,$auth) === FALSE ) {
+     API::Failure("Password invalid.",ERR_INVALID_PASSWORD);
+    }
+    Auth::NotifyPasswordChanged($auth);
+    return Session::GenerateFor($auth['ID']);
+   }
+   API::Failure("Password invalid.",ERR_INVALID_PASSWORD);
+  }
+
   function byUsername( $un ) {
    plog('Find user: '.$un);
    return $this->First( "username", $un );
@@ -42,18 +57,19 @@
    } else return FALSE;
   }
 
-  static function SetPassword( $input, $auth ) {
-   $hash = password_hash($input, PASSWORD_DEFAULT, $options);
-   $this->Set( $auth['ID'], array( 'password' => $hash ) );
+  function SetPassword( $input, $auth ) {
+   $hash = ourcrypt($input); // maps to password_hash()
+   if ( $hash == $auth['password'] ) return FALSE;
+   $this->Set( $auth['ID'], array( 'password' => $hash, 'password_expiry'=>strtotime(PASSWORD_EXPIRE_TIME) ) );
+   return TRUE;
   }
 
   static function CheckPassword( $input, $auth ) {
    $hash = $auth['password'];
    if ( strlen(trim($hash)) === 0 ) return TRUE;
-   $options=NULL;
    if ( password_verify( $input, $hash ) ) {
-    if (password_needs_rehash($hash, PASSWORD_DEFAULT, $options)) {
-     $hash = password_hash($input, PASSWORD_DEFAULT, $options);
+    if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+     $hash = ourcrypt($input); // maps to password_hash()
      $this->Set( $auth['ID'], array( 'password' => $hash ) );
     }
     return TRUE;
@@ -75,5 +91,9 @@
   }
 
   static function Logout() { return Session::Logout(); }
+
+  static function NotifyPasswordChanged( $auth ) {
+   // TODO: Send email to $auth['Email']
+  }
 
  };

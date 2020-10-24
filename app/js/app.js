@@ -1,3 +1,5 @@
+// Copyright (c) 2018-2020 Fantastic! Inc.  All rights reserved.
+
 var app = null;
 
 var appInfo = new AppInfo();
@@ -195,9 +197,16 @@ class MicertifyApp {
   $("#login-button").click(function(e){
 	  app.api.username = GetInputValue("login-username");
 	  app.api.password = GetInputValue("login-password");
-	  $.modal.close();
 	  app.api.Login();
   });
+  
+  // Establish Password Strength feature
+  var password=Get("mcapp-new-password");
+  password.addEventListener('input', passCheckFun);
+  password.addEventListener('onload', passCheckFun);
+  password.addEventListener('onchange', passCheckFun);
+  password.addEventListener('onfocus', passCheckFun);
+  password.addEventListener('onblur', passCheckFun);
   
   // Establish onfocus tracking
   $("input").focus( function(e) { app.focused = this; app.focusedEvent=e; } );
@@ -251,6 +260,7 @@ class MicertifyApp {
 
  // Called when not logged in, session invalid / expired or network issue. 
  NoSessionStateCallback() {
+  if ( $("#mcapp-password-form").is(":visible") ) return;
   console.log("NoSessionStateCallback entered");
   CheckMaintenanceMode();
   ClearSuperGlobals();
@@ -262,7 +272,6 @@ class MicertifyApp {
   this.Title("Log in");
   console.log("Show login modal.");
   $("#mcapp-login-box").modal({ escapeClose: false, clickClose: false, showClose: false });
-  // $.modal.close();
  }
  
  ShowLogout() {
@@ -270,6 +279,36 @@ class MicertifyApp {
  }
  
  Logout() { app.api.Logout(); }
+ 
+ ShowPasswordExpired() {
+  CallDeferredUnique(-122,function(){app.ShowPasswordExpiredModal();});
+ }
+ 
+ ShowPasswordExpiredModal() {
+  SuperWarn("Your password is expired.  Please choose a new one.");
+  console.log("ShowPasswordExpired");
+  $("#mcapp-password-form").modal({ escapeClose: false, clickClose: false, showClose: false });
+  $("#password-strength-text").html("");
+  $("#password-box-msg").html("Your password has expired, please choose a new password");
+  $("#mcapp-password-old").hide();
+  $("#mcapp-password-forgot").hide();
+  $("#mcapp-password-update-button").unbind('click');
+  $("#mcapp-password-update-button").on('click', function(e) {
+   var pw_new  = Get("mcapp-new-password");
+   var pw_new2 = Get("mcapp-new-password-confirm");
+   var message = Get("mcapp-password-update-result");
+   if ( $(pw_new).val() != $(pw_new2).val() ) {
+    Warn("New passwords do not match!");
+   } else {
+    console.log("Updating password.");
+    api.UpdatePassword( $(pw_new).val(),
+     function() {
+      Warn("Could not update password!");
+     }
+    );
+   }
+  });
+ }
  
  OnEnter() {
 	 if ( ( app.focused && app.focused === Get("mcapp-sidebar-search-input") )

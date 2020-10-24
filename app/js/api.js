@@ -60,6 +60,7 @@ class MicertifyAPI {
 		this.user = null;
 		this.errorcode = this.GetErrorCodes();
 		this.initializing=true;
+  this.requestCounter = 0;
 		api = this;
     }	
 	
@@ -109,7 +110,7 @@ class MicertifyAPI {
 		if ( api.admin !== null ) r.setRequestHeader( "X-Papi-Admin-Token", api.admin );
 	}
 	
-	DefaultSuccess(data) { 
+	DefaultSuccess(data, textStatus, xhr) { 
 	 console.log("REQUEST: success: ");
 	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
 	 console.log(data);	 
@@ -120,12 +121,25 @@ class MicertifyAPI {
 	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
 	 console.log(data);
 	}
-
-	DefaultError(data) { 
-//	 alert("Error!");
-	 console.log("REQUEST: error!:");
-	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
-	 console.log(data);
+ 
+ // Unfortunately this function is often called twice.
+	DefaultError(data,textStatus,errorThrown) {
+  if ( data.responseJSON.error == -121 ) {
+   CallDeferredUnique(-121,function(){ SuperWarn("Password invalid."); app.ShowLoginModal();});
+  } else if ( data.responseJSON.error == -124 ) {
+   CallDeferredUnique(-124,function(){ SuperWarn("Not a valid username."); app.ShowLoginModal();});
+  } else if ( data.responseJSON.error == -122 ) {
+   FakeError("Password Expired, Error reported: "+textStatus+", threw: "+errorThrown);
+   console.log(data);
+   if ( api.username == null ) app.Refresh();
+   else api.app.ShowPasswordExpired();
+   return;
+  } else {
+   FakeError("REQUEST: Error: "+textStatus+", threw: "+errorThrown);
+   console.log(data);
+ 	 if ( defined(data.message) ) api.messageHistory.push(Timestamped(data));
+ 	 console.log(data);   
+  }
 	}
 	
 	EmptyFunction(data) {
@@ -133,12 +147,14 @@ class MicertifyAPI {
 	}
 	
 	Request( post_data, successFunc= api.DefaultSuccess, doneFunc= api.DefaultDone, errorFunc = api.DefaultError ) {
+  api.requestCounter++;
 		api.requestHistory.push(Timestamped({ data: post_data }));
 		$.ajax({
 			type: "POST",
 			url: api.api_url,
 			data: { data: post_data },
 			wasData : post_data,
+   requestCounter : api.requestCounter,
 			dataType: "json",
 			beforeSend: function(request){api.ConstructRequestHeaders(request);},
 			done: doneFunc,
@@ -149,12 +165,14 @@ class MicertifyAPI {
 	}
 	
 	RequestWithContext( post_data, appContext, successFunc= api.DefaultSuccess, doneFunc= api.DefaultDone, errorFunc = api.DefaultError ) {
+  api.requestCounter++;
 		api.requestHistory.push(Timestamped({ data: post_data }));
 		$.ajax({
 			type: "POST",
 			url: api.api_url,
 			data: { data: post_data },
 			wasData : post_data,
+   requestCounter : api.requestCounter,
 			appContext : appContext,
 			dataType: "json",
 			beforeSend: function(request){api.ConstructRequestHeaders(request);},
@@ -166,12 +184,14 @@ class MicertifyAPI {
 	}
 
 	RequestS3Image( post_data, doneFunc= api.DefaultDone, errorFunc = api.DefaultError ) {
+  api.requestCounter++;
 		api.requestHistory.push(Timestamped({ data: post_data }));
 		$.ajax({
 			type: "POST",
 			url: api.s3_url,
 			data: { data: post_data },
 			wasData : post_data,
+   requestCounter : api.requestCounter,
 			beforeSend: function(request){api.ConstructRequestHeaders(request);},
 			dataType: "json",
 			done: doneFunc,
@@ -223,21 +243,43 @@ class MicertifyAPI {
 	}
 	
 	Login() {
-		var data={ "login" : { "username" : api.username, "password" : api.password } }
+		var data={ "login" : { "username" : api.username, "password" : api.password } };
 		api.Request( data,
-       function (e) {
-        if ( api.Successful(e) ) {
-        api.SetSession(e.data.key);
-        api.app.Recurring();
-        if ( app.after_login ) { app.after_login(); app.after_login=null; }
-	      }
-		  api.password=true;
-		  console.log(api);
+   function (e) {
+     if ( api.Successful(e) ) {
+      $.modal.close();
+      api.SetSession(e.data.key);
+      api.app.Recurring();
+      if ( app.after_login ) { app.after_login(); app.after_login=null; }
+  		  api.password=true;
+ 	 	  console.log(api);
+     } else api.password=null;
 		 }, 
 		 api.EmptyFunction
 		);
 	}
 	
+ 
+	UpdatePassword( newpassword, OnFailure ) {
+		var data={ "action":"password", "data" : { "username" : api.username, "password" : api.password, "newpassword": newpassword } };
+		api.Request( data,
+   function (e) {
+    if ( api.Successful(e) ) {
+     $.modal.close();
+     api.SetSession(e.data.key);
+     if ( app.after_login ) { app.after_login(); app.after_login=null; }
+ 		  api.password=true;
+	 	  console.log(api);
+    } else {
+     api.password=null;
+     OnFailure(e);
+    }
+		 },
+   api.EmptyFunction,
+		 OnFailure
+		);
+	}
+ 
 	Logout() {
 		console.log("Logging out..");
 		var data={ "action" : "logout" };

@@ -62,7 +62,7 @@
   "username"=>$un,
   "password"=>ourcrypt($pw),
   "email"=>$em,
-  "password_expiry"=>strtotime("+1 years"),
+  "password_expiry"=>strtotime(PASSWORD_EXPIRE_TIME),
   "FacebookID"=>"",
   "birthdate"=>0,
   "acl"=>0,

@@ -18,7 +18,17 @@
    if (!isset($vars['session'])) return API::HeaderCredentials($vars);
    return Session::ByKey($vars['session']);
   }
-  
+
+  static function UpdatePassword( $vars ) {
+   $vars = $vars['data'];
+   plog( $vars );
+   $un = $vars['data']['username'];
+   $pw = $vars['data']['password'];
+   $newpw = $vars['data']['newpassword'];
+   $result=Auth::UpdatePassword( $un, $pw, $newpw );
+   API::Response("success","Password Update",array("result"=>$result));
+  }
+
   static function Login( $un, $pw ) {
     $result=Auth::Login($un,$pw);
     if ( $result === -123 ) API::Failure("Password is expired.",ERR_EXPIRED_PASSWORD);

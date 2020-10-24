@@ -1,10 +1,42 @@
 var PI=Math.PI.toFixed(20);
 
-function interpolate( min, max, percent_norm_1 ) {
- min=parseFloat(min);
- max=parseFloat(max); 
- return ( (min) + ((max) - (min) / (percent_norm_1) == 0.0 ? 1.0 : (percent_norm_1) ) );
+function FakeError(identifier) {
+ console.log(identifier);
+ console.log(new Error().stack);
 }
+
+
+var pwstrength=0;
+function passCheckFun( e ) {
+ var ele=e.target;
+ var outputele = Get("password-strength-text");
+  var password_strength_messages = {
+   0: "Worst <span class='fa fa-warning mi-red'></span>",
+   1: "Bad <span class='fa fa-thumbs-down mi-red'></span>",
+   2: "Weak <span class='fa fa-frown-o mi-red'></span>",
+   3: "Good <span class='fa fa-check mi-green'></span>",
+   4: "<span class='mi-green'>Strong</span> <span class='fa fa-user-secret'></span>"
+  };
+  var v = ele.value;
+  var result = zxcvbn(v);
+  if(v !== "") {
+        outputele.innerHTML = "Password Strength: " + "<strong>"
+         + password_strength_messages[result.score] + "</strong>"
+         ;
+       //  <BR>"
+       //  + " <span class='feedback'>" + result.feedback.warning + " " + result.feedback.suggestions + "</span>";
+        pwstrength=result.score;
+  } else { outputele.innerHTML = ""; pwstrength=0; }
+}
+
+function Get( id ) { return document.getElementById(id); }
+
+function GetInputValue(id) {
+	var a = Get(id);
+	return $(a).val();
+}
+
+// Date features
 
 var Date_options = {};
 var idleSince = Date.now();
@@ -25,6 +57,18 @@ function formatDateForHTML(date) {
 
 var todays_html_date=formatDateForHTML(idleSince);
 var week_ago_html_date=formatDateForHTML(Date.now() - 7*(24*60*60*1000));
+
+function nowTimeDate() {
+ var currentdate = new Date(Date.now());
+ return currentdate.toLocaleString().replaceAll(",","");
+ /*
+ return (currentdate.getMonth()+1)  + "/"
+      + currentdate.getDate() + "/"
+      + currentdate.getFullYear() + " @ "  
+      + currentdate.getHours() + ":"  
+      + currentdate.getMinutes();
+      */
+}
 
 function HUMANDATE( dstring ) { // Locale version for human eyes
  var d= new Date(dstring);
@@ -95,12 +139,22 @@ function importObject(to, from,name=null) {
  }
 }
 
+function downloadLink(url,filename) {
+  var element = document.createElement('a');
+  element.setAttribute('href', url);
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
 function isChecked(item) {	
     if ( item.checked ) return true;
     switch(item.getAttribute('aria-checked')) {
         case "true": return true;
+     default: return false;
     }
-	return false;
 }
 
 function stripHtml(html) {
@@ -109,6 +163,10 @@ function stripHtml(html) {
    return tmp.textContent || tmp.innerText || "";
 }
 
+function preventDefaults (e) {
+  e.preventDefault()
+  e.stopPropagation()
+}
 
 	 // Function to download data to a file
 function downloadAsFile(data, filename, type="text") {
@@ -229,6 +287,24 @@ function scrollFunction() {
   }
 }
 
+// scrolling
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+  document.body.scrollTop = 0; // For Safari
+  document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}
+
+function Tooltip( domid, content, direction="top" ) {
+ var dom=Get(domid);
+ if ( !defined(dom) || !dom ) return false;
+ $(dom).attr("data-toggle","tooltip");
+ $(dom).attr("data-placement",direction);
+ $(dom).attr("title",content);
+ $(dom).tooltip();
+ return true;
+}
+
+
 function html_Switch( domid, checked=false, disabled=false) {
 	return '<div class="onoffswitch" id="'+domid+'-wrapper"><input type="checkbox" name="'+domid+'" class="onoffswitch-checkbox" id="'+domid+'"'+(checked?" checked":"")+(disabled?" disabled":"")+'>'
 	 +'<label class="onoffswitch-label" for="'+domid+'"><span class="onoffswitch-inner"></span><span class="onoffswitch-switch"></span></label></div>';
@@ -254,14 +330,6 @@ function getparams() {
 }
 function get_protocol() { return location.protocol; }
 function is_ssl() { return (get_protocol() === 'https:'); }
-
-// scrolling
-
-// When the user clicks on the button, scroll to the top of the document
-function topFunction() {
-  document.body.scrollTop = 0; // For Safari
-  document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-}
 
 /**
  * return the distance between two points.
@@ -315,24 +383,9 @@ function WITHIN(tx,ty,x,y,w,h)          { return ( tx > x && tx < x+w && ty > y 
 function WITHINInclusive(tx,ty,x,y,w,h) { return ( tx >= x && tx <= x+w && ty >= y && ty <= y+h ); }
 function rad2deg(radians) {  return radians * (180/Math.PI.toFixed(20));  }
 function LineAngleDeg(x,y,x2,y2) { return rad2deg(Math.atan2( (y2-y), (x2-x) )); }
+function pir2( radius ) { return PI * sq(radius); }
+function sq( a ) { return a*a; }
 
-
-function Get( id ) { return document.getElementById(id); }
-
-function GetInputValue(id) {
-	var a = Get(id);
-	return $(a).val();
-}
-
-function Tooltip( domid, content, direction="top" ) {
- var dom=Get(domid);
- if ( !defined(dom) || !dom ) return false;
- $(dom).attr("data-toggle","tooltip");
- $(dom).attr("data-placement",direction);
- $(dom).attr("title",content);
- $(dom).tooltip();
- return true;
-}
 
 // returns the browser's page visibility property
 function PageVisibilityProp(){
@@ -384,9 +437,67 @@ function slugify(s) {
     .replace(/-+$/, '') // Trim - from end of text
 }
 
+function fmod(num,modulus) { return ((num<0) ? Math.abs(modulus) : 0) + (num % modulus); }
+function interpolate( min, max, percent_norm_1 ) {
+ min=parseFloat(min);
+ max=parseFloat(max); 
+ return ( (min) + ((max) - (min) / (percent_norm_1) == 0.0 ? 1.0 : (percent_norm_1) ) );
+}
 
 
-// html form handler that supports jquery automation with ajax api
+function SaveButton( where, model, saveFunction, text="Save Changes", prefix="jsapp" ) {
+	var domid=prefix+'-saveButton';
+	var html='<button id="'+domid+'">'+text+'</button>';
+	$(Get(where)).append(html);
+	var ele=Get(domid);
+	ele.model=model;
+	ele.saveFunction = saveFunction;
+	$(ele).click(function(e){
+  this.setAttribute("disabled",true);
+	 this.saveFunction(e);
+	 $(this).prop("disabled",true);
+	 $(this).removeAttr("disabled");
+	});
+}
+
+// Executes your fun "form model" that usually is built off an API data block
+// expects: unpackFunc( data, model, domid_prefix, context )
+function Modelize( injectpoint, prefix="jsapp-model", model, jqueryIt=true ) {
+	$(injectpoint).html(PackForm(model,prefix));
+	if ( jqueryIt ) jQueryForm(model, prefix);
+}
+
+function defaultUnmapForm(data) { return data; }
+
+function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc=api.EmptyFunction, prefix="jsapp-model" ) {
+ console.log(model);
+	var data=UnpackForm(model,prefix);
+	console.log(data);
+	if ( data.error ) Warn(data.error.message);
+	else app.api.Modify("Program", data.id, 
+		unmapFunc(data),
+		completionFunc,
+		function(e){ Warn("Unable to save changes!"); }
+ );
+}
+
+// Responsive tests
+
+function ProbeAreaWidth(domid) {
+  var probe=document.createElement("div");
+	 var outer=Get(domid);
+  outer.appendChild(probe);
+	 probe.setAttribute("id","ProbeAreaWidth-probe");
+	 probe.setAttribute("style","width:100%;");
+	 var totalW=probe.clientWidth;
+  outer.removeChild(probe);
+  return totalW;
+}
+
+
+// HTML form helper
+
+// an html form handler that supports jquery automation with ajax api
 
 /*
  * Form Model Description:
@@ -1041,56 +1152,6 @@ function UnpackForm( model, prefix="jsapp-model" ) {
  return data;
 }
 
-function SaveButton( where, model, saveFunction, text="Save Changes", prefix="jsapp" ) {
-	var domid=prefix+'-saveButton';
-	var html='<button id="'+domid+'">'+text+'</button>';
-	$(Get(where)).append(html);
-	var ele=Get(domid);
-	ele.model=model;
-	ele.saveFunction = saveFunction;
-	$(ele).click(function(e){
-  this.setAttribute("disabled",true);
-	 this.saveFunction(e);
-	 $(this).prop("disabled",true);
-	 $(this).removeAttr("disabled");
-	});
-}
-
-// Executes your fun "form model" that usually is built off an API data block
-// expects: unpackFunc( data, model, domid_prefix, context )
-function Modelize( injectpoint, prefix="jsapp-model", model, jqueryIt=true ) {
-	$(injectpoint).html(PackForm(model,prefix));
-	if ( jqueryIt ) jQueryForm(model, prefix);
-}
-
-function defaultUnmapForm(data) { return data; }
-
-function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc, prefix="jsapp-model" ) {
- console.log(model);
-	var data=UnpackForm(model,prefix);
-	console.log(data);
-	if ( data.error ) Warn(data.error.message);
-	else app.api.Modify("Program", data.id, 
-		unmapFunc(data),
-		completionFunc,
-		function(e){ Warn("Unable to save changes!"); }
- );
-}
-
-// Responsive tests
-
-function ProbeAreaWidth(domid) {
-  var probe=document.createElement("div");
-	 var outer=Get(domid);
-  outer.appendChild(probe);
-	 probe.setAttribute("id","ProbeAreaWidth-probe");
-	 probe.setAttribute("style","width:100%;");
-	 var totalW=probe.clientWidth;
-  outer.removeChild(probe);
-  return totalW;
-}
-
-
 // HTML helpers
 
 // One or more non-breaking spaces
@@ -1441,3 +1502,26 @@ function center( inner="", css=null, id=null, style=null, click=null, other=null
  s+='>';
  return s+inner+'</center>';
 }
+
+
+
+
+/// A deferred queue that gaurantees unique calls
+
+var deferredQueueEventCodes=[];
+var deferredQueueFunctions=[];
+function CallDeferredUnique(code,fun) {
+ for ( var i=0; i<deferredQueueFunctions.length; i++ ) {
+  if ( deferredQueueEventCodes[i] == code ) return;
+ }
+ deferredQueueFunctions[deferredQueueFunctions.length]=fun;
+ deferredQueueEventCodes[deferredQueueEventCodes.length]=code;
+}
+function updateDeferredQueue() {
+ for ( var i=0; i<deferredQueueFunctions.length; i++ ) {
+  deferredQueueFunctions[i]();
+ }
+ deferredQueueEventCodes=[];
+ deferredQueueFunctions=[];
+}
+setInterval(updateDeferredQueue,15);

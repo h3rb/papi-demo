@@ -38,7 +38,10 @@
   <link rel="stylesheet" href="/css/jquery-ui.css" type="text/css" />
   <link rel="stylesheet" href="/css/spectrum.css" />
   <link rel="stylesheet" href="css/micertify.css"> <!-- our custom stuff -->
-  
+
+
+  <script src="../register/assets/js/zxcvbn.js"></script>
+
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -52,7 +55,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 
   <script type="text/javascript" src="js/js.cookie.min.js"></script>
-  
+   
    
   <!-- app and components --> 
   <script type="text/javascript" src="js/app.common.js"></script>
@@ -119,7 +122,7 @@
                   <li><!-- start message -->
                     <a href="#">
                       <div class="pull-left">
-                        <img src="dist/img/user2-160x160.jpg" class="img-circle" alt="User Image">
+                        <img src="/i/usericon.png" class="img-circle border1" alt="User Image">
                       </div>
                       <h4>
                         Support Team
@@ -132,7 +135,7 @@
                   <li>
                     <a href="#">
                       <div class="pull-left">
-                        <img src="dist/img/user3-128x128.jpg" class="img-circle" alt="User Image">
+                        <img src="/i/usericon.png" class="img-circle border1" alt="User Image">
                       </div>
                       <h4>
                         Design Team
@@ -144,7 +147,7 @@
                   <li>
                     <a href="#">
                       <div class="pull-left">
-                        <img src="dist/img/user4-128x128.jpg" class="img-circle" alt="User Image">
+                        <img src="/i/usericon.png" class="img-circle border1" alt="User Image">
                       </div>
                       <h4>
                         Developers
@@ -156,7 +159,7 @@
                   <li>
                     <a href="#">
                       <div class="pull-left">
-                        <img src="dist/img/user3-128x128.jpg" class="img-circle" alt="User Image">
+                        <img src="/i/usericon.png" class="img-circle border1" alt="User Image">
                       </div>
                       <h4>
                         Sales Department
@@ -168,7 +171,7 @@
                   <li>
                     <a href="#">
                       <div class="pull-left">
-                        <img src="dist/img/user4-128x128.jpg" class="img-circle" alt="User Image">
+                        <img src="/i/usericon.png" class="img-circle border1" alt="User Image">
                       </div>
                       <h4>
                         Reviewers
@@ -305,17 +308,17 @@
           <!-- User Account: style can be found in dropdown.less -->
           <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <span id="mcapp-topnav-userimage"><img src="dist/img/user2-160x160.jpg" class="user-image" alt="User Image"></span>
+              <span id="mcapp-topnav-userimage"><img src="/i/usericon.png" class="user-image border1" alt="User Image"></span>
               <span class="hidden-xs" id="mcapp-topnav-username"></span>
             </a>
             <ul class="dropdown-menu">
               <!-- User image -->
               <li class="user-header">
-			    <span id="mcapp-dropdown-userimage"><img src="dist/img/user2-160x160.jpg" class="img-circle" alt="User Image"></span>
-                <p id="mcapp-dropdown-userblurb">
+			    <span id="mcapp-dropdown-userimage"><img src="/i/usericon.png" class="img-circle img160x160 border1" alt="User Image"></span>
+                <!--p id="mcapp-dropdown-userblurb">
                   Alexander Pierce - Web Developer
                   <small>Member since Nov. 2012</small>
-                </p>
+                </p-->
               </li>
               <!-- Menu Body -->
               <li class="user-body">
@@ -324,10 +327,10 @@
                     <a href="#">Certs</a>
                   </div>
                   <div class="col-xs-4 text-center">
-                    <a href="#">Students</a>
+                    <a href="#">Tests</a>
                   </div>
                   <div class="col-xs-4 text-center">
-                    <a href="#">Tests</a>
+                    <a href="#">Students</a>
                   </div>
                 </div>
                 <!-- /.row -->
@@ -335,7 +338,7 @@
               <!-- Menu Footer-->
               <li class="user-footer">
                 <div class="pull-left">
-                  <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.action.profile);" class="btn btn-default btn-flat">Profile</a>
+                  <a href="#" onclick="javascript:mcapp.Sidebar(mcapp.codes.action.profile);" class="btn btn-default btn-flat">View Profile</a>
                 </div>
                 <div class="pull-right">
                   <a href="#" onclick="javascript:mcapp.Logout();" class="btn btn-default btn-flat">Sign out</a>
@@ -548,6 +551,51 @@
 </div> <!-- /.login-box -->  
 
 
+<div class="modal login-box" id="mcapp-password-form">
+  <div class="login-logo">
+      <span class="logo-lg"><b><span class="logo-mi">Mi</span><span class="logo-certify">Certify</span><span class="logo-trademark">&trade;</span></b></span>
+  </div>
+  <!-- /.login-logo -->
+  <div class="login-box-body">
+    <p class="login-box-msg"><span id="password-box-msg">Your password has expired, please enter a new password</span></p>
+
+    <form method="post">
+      <div class="form-group has-feedback">
+        <input id="mcapp-password-old" type="password" class="form-control" placeholder="Old Password">
+        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+      </div>
+      <div class="form-group has-feedback">
+        <input id="mcapp-new-password" type="password" class="form-control" placeholder="New Password" autocomplete="off">
+        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+      </div>
+      <div class="form-group has-feedback">
+        <input id="mcapp-new-password-confirm" type="password" class="form-control" placeholder="Confirm New Password" autocomplete="off">
+        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+      </div>
+    </form>
+      <div class="row">
+        <div class="col-xs-8">
+          <button class="btn btn-primary btn-block btn-flat" id="mcapp-password-update-button">Change Password</button>
+        </div>
+        <!-- /.col -->
+        <div class="col-xs-4">
+          <span id="mcapp-password-update-result"></span><span id="password-strength-text"></span>
+        </div>
+      </div>
+
+    <!--div class="social-auth-links text-center">
+      <p>- OR -</p>
+      <a href="#" class="btn btn-block btn-social btn-facebook btn-flat"><i class="fa fa-facebook"></i> Sign in using
+        Facebook</a>
+      <a href="#" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google-plus"></i> Sign in using
+        Google+</a>
+    </div-->    <!-- /.social-auth-links -->
+
+    <a href="#" id="mcapp-password-forgot">I forgot my password or username</a><br>
+    <!--a href="register.html" class="text-center">Register a new membership</a-->
+
+  </div>  <!-- /.login-box-body -->
+</div> <!-- /.login-box -->  
 
         <div class="modal" id="mcapp-modal">
               <div class="modal-header">
@@ -795,6 +843,7 @@
   $.widget.bridge('uibutton', $.ui.button);
 </script>
 <!-- Bootstrap 3.3.7 -->
+
 <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="js/bootstrap-notify.min.js"></script>
 <!-- Morris.js charts -->

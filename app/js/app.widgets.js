@@ -1,6 +1,13 @@
 
 // http://bootstrap-notify.remabledesigns.com/
 
+
+function SuperWarn(msg) {
+	console.log("Warning: "+msg);
+	$.notify({	message: msg },{  type: 'danger', z_index:1000001111111 });
+}
+
+
 function Warn(msg) {
 	console.log("Warning: "+msg);
 	$.notify({	message: msg },{  type: 'danger', z_index:100000 });

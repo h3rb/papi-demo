@@ -1,5 +1,9 @@
 <?php
 
+define("APP_VERSION","Alpha");
+
+define("PASSWORD_EXPIRE_TIME", "+6 months");
+
  // Global defines for the application
 
  global $myglobal;

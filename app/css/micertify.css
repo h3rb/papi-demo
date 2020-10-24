@@ -48,6 +48,10 @@
 .nomargin { margin: none; }
 .nopadding { padding: none; }
 
+.img160x160 { width:160px; height: 160px; }
+
+.border1 { border: solid black 1px; }
+
 .bartitle { background: #DDD; font-weight: bolder; color: #000; }
 
 .white-text { color:white; }
