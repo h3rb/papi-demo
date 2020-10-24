@@ -882,6 +882,18 @@ if ( !function_exists('bittoggle') ) {
     }
 }
 
+// Remove Whitespace
+
+if ( !function_exists('removeWhiteSpace') ) {
+ function removeWhiteSpace($text)
+ {
+    $text = preg_replace('/[\t\n\r\0\x0B]/', '', $text);
+    $text = preg_replace('/([\s])\1+/', ' ', $text);
+    $text = trim($text);
+    return $text;
+ }
+}
+
 // Backtick management.
 
 if ( !function_exists('adt') ) {
