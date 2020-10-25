@@ -2,7 +2,7 @@
  include 'core/Page.php';
 
  $getpost = getpost();
- $getpost['m']=intval($getpost['m']);
+ if ( isset($getpost['m']) ) $getpost['m']=intval($getpost['m']); else $getpost['m']=0;
 
  $p=new Page();
 
