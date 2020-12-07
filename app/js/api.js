@@ -302,6 +302,30 @@ class MicertifyAPI {
 		 }
 		);
 	}
+ 
+ Search( terms, onSuccess ) {
+  console.log("Searching..");
+  var data={ action : "search", terms: terms };
+  api.Request( data,
+		 function(e) {
+			 if ( api.Successful(e) ) {
+			 	onSuccess(this.wasData, e, this);
+			 }
+		 }
+  );
+ }
+ 
+ Discover( onSuccess ) {
+  console.log("Discover..");
+  var data={ action : "discover" };
+  api.Request( data,
+		 function(e) {
+			 if ( api.Successful(e) ) {
+			 	onSuccess(this.wasData, e, this);
+			 }
+		 }
+  );
+ }
 	
 	List( t, onSuccess ) {
 		var data={ action : "list", subject : t };
@@ -324,18 +348,7 @@ class MicertifyAPI {
 		 }
 		);	
 	}
- 
-	Search( t, input, onSuccess ) {
-		var data={ action : "list", subject: t, data:input };
-		api.Request( data,
-		 function(e) {
-			 if ( api.Successful(e) ) {
-			 	onSuccess(this.wasData, e, this);
-			 }
-		 }
-		);	
-	}
-	
+ 	
 	ListEverything( t, onSuccess ) {
 		var data={ action : "list", everything:true, subject : t };
 		api.Request( data,

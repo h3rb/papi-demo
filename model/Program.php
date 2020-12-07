@@ -32,7 +32,9 @@ abstract class ProgramMode extends Enum {
     "autoenroll" => array( "AutoEnroll", 'bool' ),
     "days" => array("Days", 'integer' ),
     "crowdgrading" => array("CrowdGrading", 'integer'),
-    "intro" => array("Introduction", "string")
+    "intro" => array("Introduction", "string"),
+    "category" => array("Category",'integer'),
+    "featured" => array("Featured",'integer'),
    );
   }
   static function ValuesArray() {
@@ -52,7 +54,9 @@ abstract class ProgramMode extends Enum {
    "Description" => "",
    "Days" => 0,
    "Introduction"=>"Welcome to the course!",
-   "CrowdGrading" => 0
+   "CrowdGrading" => 0,
+   "Category" => 0,
+   "Featured" => 0,
    );
   }
   static function Make( $vars ) {

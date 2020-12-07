@@ -334,6 +334,40 @@
 	  return $v === 1;
   }
 
+  static public function Search( $terms ) {
+   global $database;
+
+   $p_model = new Program($database);
+   $programs = $p_model->Select("Published > 0 AND InviteOnly = 0 AND (Name LIKE '%$terms%' OR Description LIKE '%$terms%)'");
+
+   $t_model = new Assessment($databse);
+   $assessments = $t_model->Select("Private = 0 AND (Name LIKE '%$terms%' OR Description '%$terms%')");
+
+   $results = array();
+
+   foreach ( $programs as $p ) {
+    $results[$p['ID']]=array( "program" => $p );
+   }
+
+   foreach ( $assessments as $a ) {
+    $p = intval($a['r_Program']);
+    if ( $p > 0 ) {
+     if ( !isset($results[$a['r_Program']]) ) {
+      $results[$a['r_Program']]=array("program"=>$p_model->Get($a['r_Program']), "assessments"=>array($a));
+     } else {
+      if ( !isset($results[$a['r_Program']]["assessments"]) ) $results[$a['r_Program']]["assessments"]=array();
+      $results[$a['r_Program']]["assessment"][]=$a;
+     }
+    }
+   }
+
+   API::Success("Search results.",$results);
+  }
+
+  static public function Discovery() {
+   $results = array();
+   API::Success("Discovery results.",$results);
+  }
 
   static public function SpecialRequests( $vars ) {
    if ( isset($vars["type"]) ) {

@@ -61,6 +61,9 @@ if ( !is_ssl() ) { // The following block is used to restrict access to the inse
  if ( $action == 'special' || $action == 'info' ) {
   API::SpecialRequests($g);
  } else if ( $action == 'search' ) { // returns a search result
+  API::Search( $g['terms'] );
+ } else if ( $action == 'discover' ) { // returns a search result
+  API::Discovery();
  } else if ( $action == 'list' ) { // returns a list of objects of a particular type
   $value=API::GetValue($g,'subject',-3);
   API::List($g,$value);

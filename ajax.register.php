@@ -106,6 +106,6 @@
  plog('$getpost: '.vars($g));
  plog('$auth: '.vars($auth));
 
- $session_model->Create($auth['ID']);
+ Session::CreateNew($auth['ID']);
 
  echo deep_json_encode(array("result"=>"success"));

@@ -299,6 +299,8 @@ class MicertifyApp {
    var message = Get("mcapp-password-update-result");
    if ( $(pw_new).val() != $(pw_new2).val() ) {
     Warn("New passwords do not match!");
+   } else if (pwstrength < 2) {
+    Warn("Password is not strong enough!");
    } else {
     console.log("Updating password.");
     api.UpdatePassword( $(pw_new).val(),

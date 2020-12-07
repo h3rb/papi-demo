@@ -40,7 +40,9 @@ const Views_Sidebar = {
 	 	  $("#mcapp-sidebar-search-form").addClass("active");
     } else {
      $("#mcapp-sidebar-find-programs").addClass("active");
-     app.BrowsePrograms();
+     var keywords=Get("mcapp-sidebar-search-input");
+     if (keywords && keywords.value.length > 0) app.BrowsePrograms(keywords.value);
+     else app.BrowsePrograms();
     }
     
 		 break;
