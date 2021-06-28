@@ -11,7 +11,7 @@ const Views_Programs = {
 	  content += '<div class="pull-right"><button onclick="javascript:mcapp.drawAddAssessment('+program.id+');"><i class="fa fa-plus-circle"></i> New Test</button></div>';
       content += '<div class="roundbox">';
       content += "<h4>"+program.name+'</h4>';
-	  content += '<a href="#" title="Change Settings" alt="Change Settings" onclick="javascript:mcapp.Edit(mcapp.codes.edit.program,'+program.id+')"><i class="fa fa-gear"></i> Program Settings</a> ';
+	  content += '<a href="#" title="Change Settings" alt="Change Settings" onclick="javascript:mcapp.drawEditProgram('+program.id+')"><i class="fa fa-gear"></i> Program Settings</a> ';
 	  content += '<hr>';
 	  program.tests.forEach( function (test,index) {
       	  content += '<a href="#" title="Edit" class="pull-right" onclick="javascript:mcapp.drawEditAssessment('+test.id+');"><i class="fa fa-edit"></i> Edit</a>';
