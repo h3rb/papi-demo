@@ -2,6 +2,23 @@
 
  class TestingSession extends Model {
 
+
+  static function JSONMap() {
+   return array(
+    "assessmentQuestion" => array( "r_AssessmentQuestion", 'reference' ),
+    "startingToken" => array( "StartingSessionToken", 'string' ),
+    "tokens" => array( "SessionTokens", 'string' ),
+    "remaining" => array( "TimeLimit", 'integer' ),
+    "paused" => array( "Paused", 'bool' ),
+    "questionStarted" => array( "QuestionStarted", 'bool' ),
+    "remaining" => array( "Remaining", 'text' ),
+    "completed" => array( "Completed", 'text' ),
+    "nextQuestionStarts" => array( "NextQuestionStarts", 'integer' ),
+	"timePassed" => array( "TimePassed", 'integer' ),
+	"timeStarted" => array( "TimeStarted", 'integer' )
+   );
+  }
+
    // Checks and updates session token tracker
    static function TrackSessionTokensAndIP() {}
 

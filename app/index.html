@@ -870,7 +870,7 @@
 <!-- AdminLTE App -->
 <script src="dist/js/adminlte.min.js"></script>
 <!-- Bootstrap WYSIWIG -->
-<script src="../../plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
+<script src="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
 
 <script src="js/jquery.modal.min.js"></script>
 <script src="js/jquery.growl.js"></script>
@@ -912,7 +912,7 @@ $(function() {
 })(jQuery);
 
 //Now you need to append event listener
-$('body').attrchange(function(attrName) { if(attrName=='class') setTimeout(function(){mcapp.EventResize();},200); });
+$('body').attrchange(function(attrName) { if(attrName=='class' && mcapp.EventResize) setTimeout(function(){mcapp.EventResize();},200); });
 
 
 });

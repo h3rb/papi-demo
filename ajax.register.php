@@ -85,10 +85,10 @@
   "Twitter"=>"",
   "Newsletter"=>0,
   "RegistrationSurvey"=>deep_json_encode(array(
-   "m"=>$g["message"],
-   "s"=>$g["student"],
-   "t"=>$g["teacher"],
-   "o"=>$g["organization"]
+   "m"=>isset($g["message"]) ? $g["message"] : "",
+   "s"=>isset($g["student"]) ? $g["student"] : "",
+   "t"=>isset($g["teacher"]) ? $g["teacher"] : "",
+   "o"=>isset($g["organization"]) ? $g["organization"] : ""
   ))
  ));
 

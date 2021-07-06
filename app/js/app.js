@@ -88,7 +88,7 @@ class MicertifyApp {
  }
  
  SaveState( function_name, params=null ) {
-  console.log("SaveState: "+function_name);
+  console.log("SaveState: "+function_name+"\nParams:");
   console.log(params);
   app.storage.setItem( "last_function", function_name );
   app.storage.setItem( "last_function_param_count", params && is_array(params) ? params.length : (params?1:0) );
@@ -181,6 +181,7 @@ class MicertifyApp {
   app.messages = incoming.data.messages;
   app.tasks = incoming.data.tasks;
   app.notifications = incoming.data.notifications;
+  app.testsessions= incoming.data.testsessions;
   console.log("Updating UI");
   app.redrawSidebar();
   app.redrawTopnav();
@@ -266,6 +267,10 @@ class MicertifyApp {
   ClearSuperGlobals();
   // Show login window
   app.ShowLoginModal();
+ }
+ 
+ CheckMaintenanceMode() {
+	 
  }
  
  ShowLoginModal() {

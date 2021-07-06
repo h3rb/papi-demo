@@ -445,7 +445,7 @@ function interpolate( min, max, percent_norm_1 ) {
 }
 
 
-function SaveButton( where, model, saveFunction, text="Save Changes", prefix="jsapp" ) {
+function SaveButton( where, model, saveFunction, text="Save Changes", prefix="mcapp" ) {
 	var domid=prefix+'-saveButton';
 	var html='<button id="'+domid+'">'+text+'</button>';
 	$(Get(where)).append(html);
@@ -462,14 +462,14 @@ function SaveButton( where, model, saveFunction, text="Save Changes", prefix="js
 
 // Executes your fun "form model" that usually is built off an API data block
 // expects: unpackFunc( data, model, domid_prefix, context )
-function Modelize( injectpoint, prefix="jsapp-model", model, jqueryIt=true ) {
+function Modelize( injectpoint, prefix="mcapp-model", model, jqueryIt=true ) {
 	$(injectpoint).html(PackForm(model,prefix));
 	if ( jqueryIt ) jQueryForm(model, prefix);
 }
 
 function defaultUnmapForm(data) { return data; }
 
-function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc=api.EmptyFunction, prefix="jsapp-model" ) {
+function Demodelize( model, unmapFunc=defaultUnmapForm, completionFunc=api.EmptyFunction, prefix="mcapp-model" ) {
  console.log(model);
 	var data=UnpackForm(model,prefix);
 	console.log(data);
@@ -585,7 +585,7 @@ function ProbeAreaWidth(domid) {
 
 var html="",prehtml="",posthtml="",afterlabel="", inlabel="";
 var pfPrototypes={};
-function PackForm( model, prefix="jsapp-model", keepPrototypes=false ) {
+function PackForm( model, prefix="mcapp-model", keepPrototypes=false ) {
  var property=prefix.replaceAll("-","");
  if ( !keepPrototypes || !defined(pfPrototypes[property]) ) pfPrototypes[property]=[];
  html="";
@@ -929,7 +929,7 @@ function revealByValue( ele ) {
 }
 
 // call to bind functions in jquery after packing the form and spewing it
-function jQueryForm( model, prefix="jsapp-model" ) {
+function jQueryForm( model, prefix="mcapp-model" ) {
  model.forEach(function(item,index){
    item.prefix=prefix;
 	  var n = (item.name?item.name:index);
@@ -1110,7 +1110,7 @@ function FormErr(item,model,prefix) {
 }
 
 // Get the data out of a packed form
-function UnpackForm( model, prefix="jsapp-model" ) {
+function UnpackForm( model, prefix="mcapp-model" ) {
  var data={};
  console.log("Unpacking: ");
  console.log(model);

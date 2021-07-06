@@ -63,9 +63,10 @@ const Views_Programs = {
   
   
  drawEditProgram: function( id ) {
+     if ( !app.programs ) { app.doPrograms(); return; }
 	 var program = app.GetProgramByID(id);
 	 if ( !program ) return;
-  app.SaveState("drawEditProgram",id);
+     app.SaveState("drawEditProgram",id);
 	 var model=[
 	 { name: "id", type:"hidden", value:id },
 	 { name: "name", label: "Name:", type:"string", value: program.name, hint: "Program Name" },

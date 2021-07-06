@@ -383,9 +383,11 @@
    $mn = new Notification($database);
    $mt = new Task($database);
    $mm = new Message($database);
-   $notifications=API::UnmapValuesSet($mn->Select(array("Owner"=>$auth['ID'])),Notification::JSONMap());
-   $tasks=API::UnmapValuesSet($mt->Select(array("Owner"=>$auth['ID'])),Task::JSONMap());
-   $messages=API::UnmapValuesSet($mm->Select(array("Owner"=>$auth['ID'])),Message::JSONMap());
+   $mts = new TestingSession($database);
+   $notifications=API::UnmapValuesSet($mn->Select( ["Owner"=>$auth['ID']]),Notification::JSONMap());
+   $tasks=API::UnmapValuesSet($mt->Select( ["Owner"=>$auth['ID']] ),Task::JSONMap());
+   $messages=API::UnmapValuesSet($mm->Select( ["Owner"=>$auth['ID']]),Message::JSONMap());
+   $testsessions=API::UnmapValuesSet( $mts->Select( ["Owner"=>$auth['ID'],"Completed"=>0 ]),TestingSession::JSONMap());
    $result = array(
     "user" => array(
      "username" => $auth['username'],
@@ -397,6 +399,7 @@
     "messages" => $messages,
     "tasks" => $tasks,
     "notifications" => $notifications,
+	"testsessions" => $testsessions,
     // certifications count..
     // incomplete tests...
     // newly enrolled...
